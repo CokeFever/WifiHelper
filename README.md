@@ -22,7 +22,7 @@ ApplePie 這類車用 Android 盒子通常透過手機 WiFi Hotspot 取得網路
 
 ## 適用裝置
 
-- [Exploter ApplePie](https://exploter.com/collections/applepie) 系列（ApplePie Mini、ApplePie Ultra 等）
+- [NavLynx ApplePie](https://www.navlynx.com/) 系列（ApplePie Mini、ApplePie Ultra 等）
 - 其他 CarPlay AI Box / Android Auto Box
 - Android 車機主機（Android 9.0+）
 - 任何需要自動管理 WiFi/Hotspot 切換的 Android 裝置
