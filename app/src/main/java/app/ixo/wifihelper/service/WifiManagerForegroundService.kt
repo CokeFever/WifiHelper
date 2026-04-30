@@ -1,11 +1,14 @@
 package app.ixo.wifihelper.service
 
+import android.Manifest
 import android.app.Service
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import androidx.core.content.ContextCompat
 import app.ixo.wifihelper.core.SmartSwitchEngine
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -51,6 +54,13 @@ class WifiManagerForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(TAG, "Service onStartCommand")
+
+        // 權限驗證：確保必要權限已授予，否則停止服務
+        if (!hasRequiredPermissions()) {
+            Log.e(TAG, "Required permissions not granted, stopping service")
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
         // 使用引擎的初始狀態建構通知，立即啟動為前景服務
         val initialState = smartSwitchEngine.getState().value
@@ -101,6 +111,23 @@ class WifiManagerForegroundService : Service() {
                     notification
                 )
             }
+        }
+    }
+
+    /**
+     * 檢查服務運作所需的最低必要權限。
+     *
+     * @return true 表示所有必要權限已授予
+     */
+    private fun hasRequiredPermissions(): Boolean {
+        val requiredPermissions = mutableListOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.ACCESS_NETWORK_STATE
+        )
+
+        return requiredPermissions.all { permission ->
+            ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
         }
     }
 }

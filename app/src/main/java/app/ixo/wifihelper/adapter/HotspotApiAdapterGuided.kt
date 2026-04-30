@@ -75,6 +75,7 @@ class HotspotApiAdapterGuided @Inject constructor(
     private fun createTetheringSettingsIntent(): Intent {
         return Intent(ACTION_TETHERING_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            setPackage("com.android.settings")
         }
     }
 

@@ -43,7 +43,7 @@
 
     <application
         android:name=".AutoWifiManagerApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
@@ -70,7 +70,8 @@
         <!-- 開機廣播接收器：根據使用者偏好設定決定是否自動啟動服務 -->
         <receiver
             android:name=".receiver.BootReceiver"
-            android:exported="true">
+            android:exported="true"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
