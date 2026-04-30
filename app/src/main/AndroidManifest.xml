@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- WiFi 掃描需要精確位置權限（全版本） -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- 背景 WiFi 掃描需要背景位置權限（API 29+） -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- 讀取 WiFi 狀態（全版本） -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- 變更 WiFi 連線（全版本） -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- 讀取網路狀態（全版本） -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- 變更網路狀態（全版本） -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
+    <!-- 前景服務權限（全版本） -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- Foreground Service 類型宣告：connectedDevice（API 34+） -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+
+    <!-- 通知權限（API 33+） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 開機廣播接收（全版本） -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Hotspot 直接控制所需（API 28-32），API 33+ 改用引導模式不需要此權限 -->
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        android:maxSdkVersion="32"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- WiFi 裝置探索（API 33+） -->
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
+
+    <application
+        android:name=".AutoWifiManagerApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AutoWifiManager"
+        tools:targetApi="36">
+
+        <!-- 主畫面 Activity -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Foreground Service 宣告，foregroundServiceType="connectedDevice" -->
+        <service
+            android:name=".service.WifiManagerForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
+        <!-- 開機廣播接收器：根據使用者偏好設定決定是否自動啟動服務 -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

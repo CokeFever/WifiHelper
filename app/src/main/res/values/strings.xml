@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WiFi Helper</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">主控面板</string>
+    <string name="nav_settings">設定</string>
+
+    <!-- Dashboard -->
+    <string name="smart_switch_label">智慧切換</string>
+    <string name="smart_switch_description">偵測到良好 WiFi 訊號且行動網路不可用時，自動切換 WiFi 與 Hotspot</string>
+    <string name="hotspot_button_label">Hotspot 操作</string>
+    <string name="hotspot_state_enabled">Hotspot 已啟用</string>
+    <string name="hotspot_state_disabled">Hotspot 已停用</string>
+    <string name="hotspot_state_unknown">Hotspot 狀態未知</string>
+    <string name="wifi_status_label">WiFi 連線狀態</string>
+    <string name="wifi_connected_format">已連線：%s</string>
+    <string name="wifi_disconnected">未連線</string>
+    <string name="known_networks_label">已知網路</string>
+    <string name="known_networks_count_format">偵測到 %d 個已知網路</string>
+    <string name="network_mode_label">網路模式</string>
+
+    <!-- Settings -->
+    <string name="auto_start_label">開機自動啟動</string>
+    <string name="auto_start_description">裝置開機後自動啟動背景服務</string>
+    <string name="signal_threshold_label">訊號強度門檻</string>
+    <string name="signal_threshold_format">%d dBm</string>
+    <string name="signal_threshold_description">WiFi 訊號強度低於此值時不自動連線（範圍：-100 至 -30 dBm）</string>
+</resources>

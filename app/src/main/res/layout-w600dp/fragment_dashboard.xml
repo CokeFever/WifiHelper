@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dual column layout for screens >= 600dp width -->
+<!-- Requirements: 6.3 (interactive elements min 48dp), 6.4 (main buttons min 72dp),
+     6.5 (high contrast), 6.6 (text min 16sp), 6.8 (dual column >=600dp) -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:padding="24dp">
+
+    <!-- Vertical guideline at 50% for dual column -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <!-- ===== LEFT COLUMN: Controls ===== -->
+
+    <!-- Smart Switch Section -->
+    <TextView
+        android:id="@+id/smart_switch_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:text="@string/smart_switch_label"
+        android:textColor="@color/on_background"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/smart_switch_toggle" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/smart_switch_toggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
+        app:layout_constraintTop_toTopOf="@id/smart_switch_label"
+        app:layout_constraintBottom_toBottomOf="@id/smart_switch_label"
+        app:layout_constraintEnd_toStartOf="@id/guideline_center" />
+
+    <TextView
+        android:id="@+id/smart_switch_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/smart_switch_description"
+        android:textColor="@color/on_background"
+        android:textSize="16sp"
+        android:alpha="0.7"
+        app:layout_constraintTop_toBottomOf="@id/smart_switch_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline_center" />
+
+    <!-- Divider (left column) -->
+    <View
+        android:id="@+id/divider_1"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@color/on_background"
+        android:alpha="0.2"
+        app:layout_constraintTop_toBottomOf="@id/smart_switch_description"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline_center" />
+
+    <!-- Hotspot Button - min 72dp x 72dp per requirement 6.4 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/hotspot_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:minWidth="72dp"
+        android:minHeight="72dp"
+        android:text="@string/hotspot_button_label"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/primary"
+        app:cornerRadius="12dp"
+        app:layout_constraintTop_toBottomOf="@id/divider_1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline_center" />
+
+    <TextView
+        android:id="@+id/hotspot_state_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center"
+        android:text="@string/hotspot_state_unknown"
+        android:textColor="@color/on_background"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/hotspot_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline_center" />
+
+    <!-- ===== RIGHT COLUMN: Status ===== -->
+
+    <!-- WiFi Connection Status -->
+    <TextView
+        android:id="@+id/wifi_status_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="@string/wifi_status_label"
+        android:textColor="@color/on_background"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/guideline_center"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/wifi_status_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="16dp"
+        android:text="@string/wifi_disconnected"
+        android:textColor="@color/on_background"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/wifi_status_label"
+        app:layout_constraintStart_toEndOf="@id/guideline_center"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Divider (right column) -->
+    <View
+        android:id="@+id/divider_2"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:background="@color/on_background"
+        android:alpha="0.2"
+        app:layout_constraintTop_toBottomOf="@id/wifi_status_text"
+        app:layout_constraintStart_toEndOf="@id/guideline_center"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Known Networks Count -->
+    <TextView
+        android:id="@+id/known_networks_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:text="@string/known_networks_label"
+        android:textColor="@color/on_background"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/divider_2"
+        app:layout_constraintStart_toEndOf="@id/guideline_center"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/known_networks_count_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="16dp"
+        android:textColor="@color/on_background"
+        android:textSize="16sp"
+        tools:text="偵測到 3 個已知網路"
+        app:layout_constraintTop_toBottomOf="@id/known_networks_label"
+        app:layout_constraintStart_toEndOf="@id/guideline_center"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
