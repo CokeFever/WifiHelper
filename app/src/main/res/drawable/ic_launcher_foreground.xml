@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- WiFi 弧線 1（最外層） - 白色 -->
+    <path
+        android:pathData="M54,78 A32,32 0 0,1 22,46"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M54,78 A32,32 0 0,0 86,46"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- WiFi 弧線 2（中層） - 白色 -->
+    <path
+        android:pathData="M54,78 A22,22 0 0,1 32,56"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M54,78 A22,22 0 0,0 76,56"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- WiFi 弧線 3（內層） - 白色 -->
+    <path
+        android:pathData="M54,78 A12,12 0 0,1 42,66"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M54,78 A12,12 0 0,0 66,66"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- WiFi 中心點 - 白色 -->
+    <path
+        android:pathData="M54,78 m-3.5,0 a3.5,3.5 0 1,1 7,0 a3.5,3.5 0 1,1 -7,0"
+        android:fillColor="#FFFFFF" />
+
+    <!-- 循環箭頭（右下角）- 綠色，代表自動切換 -->
+    <path
+        android:pathData="M74,72 A14,14 0 1,1 68,58"
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <!-- 箭頭頭部 -->
+    <path
+        android:pathData="M68,58 L72,62 L64,62 Z"
+        android:fillColor="#4CAF50" />
+
+</vector>
