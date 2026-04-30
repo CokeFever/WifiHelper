@@ -59,16 +59,33 @@ jobs:
         run: |
           sed -i "s/versionName = \"1.0.0\"/versionName = \"${{ steps.version.outputs.VERSION }}\"/" app/build.gradle.kts
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
 
-      - name: Build Release AAB (App Bundle)
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/keystore.jks
+
+      - name: Build & Sign Release APK
+        run: ./gradlew assembleRelease
+        env:
+          KEYSTORE_FILE: keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Build & Sign Release AAB (App Bundle)
         run: ./gradlew bundleRelease
+        env:
+          KEYSTORE_FILE: keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Rename artifacts
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
-          cp app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/WifiHelper-${VERSION}.apk
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/WifiHelper-${VERSION}-debug.apk
+          cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/WifiHelper-${VERSION}.apk
           cp app/build/outputs/bundle/release/app-release.aab app/build/outputs/bundle/release/WifiHelper-${VERSION}.aab
 
       - name: Create GitHub Release
@@ -77,5 +94,6 @@ jobs:
           name: WiFi Helper ${{ steps.version.outputs.VERSION }}
           generate_release_notes: true
           files: |
+            app/build/outputs/apk/debug/WifiHelper-${{ steps.version.outputs.VERSION }}-debug.apk
             app/build/outputs/apk/release/WifiHelper-${{ steps.version.outputs.VERSION }}.apk
             app/build/outputs/bundle/release/WifiHelper-${{ steps.version.outputs.VERSION }}.aab
