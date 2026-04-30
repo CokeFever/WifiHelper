@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.autowifimanager"
+    namespace = "app.ixo.wifihelper"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.autowifimanager"
+        applicationId = "app.ixo.wifihelper"
         minSdk = 28
         targetSdk = 35
         versionCode = 1
