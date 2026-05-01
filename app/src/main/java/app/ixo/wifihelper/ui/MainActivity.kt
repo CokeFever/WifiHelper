@@ -1,11 +1,17 @@
 package app.ixo.wifihelper.ui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import app.ixo.wifihelper.R
+import app.ixo.wifihelper.core.NetworkStateMonitor
 import app.ixo.wifihelper.data.PreferenceRepository
 import app.ixo.wifihelper.service.ServiceRestartWorker
 import app.ixo.wifihelper.service.WifiManagerForegroundService
@@ -41,7 +47,43 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var preferenceRepository: PreferenceRepository
 
+    @Inject
+    lateinit var networkStateMonitor: NetworkStateMonitor
+
     private lateinit var bottomNavigation: BottomNavigationView
+
+    /**
+     * 需要在啟動時請求的執行階段權限清單。
+     * 根據 API 等級動態加入 Android 13+ 的權限。
+     */
+    private val requiredPermissions: Array<String>
+        get() {
+            val permissions = mutableListOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.CHANGE_WIFI_STATE,
+                Manifest.permission.ACCESS_NETWORK_STATE
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissions.add(Manifest.permission.NEARBY_WIFI_DEVICES)
+            }
+            return permissions.toTypedArray()
+        }
+
+    /**
+     * 權限請求結果回呼。
+     * 所有權限皆授予後才啟動服務同步。
+     */
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        val allGranted = results.values.all { it }
+        if (allGranted) {
+            // 權限授予後重新讀取網路狀態（SSID 需要位置權限）
+            networkStateMonitor.refreshState()
+            syncServiceState()
+        }
+    }
 
     /**
      * 當前是否為寬螢幕模式（≥600dp）。
@@ -69,21 +111,33 @@ class MainActivity : AppCompatActivity() {
             bottomNavigation.selectedItemId = selectedId
         }
 
-        // 根據偏好設定決定是否啟動服務
-        syncServiceState()
+        // 檢查並請求必要權限，授權後才同步服務狀態
+        if (hasRequiredPermissions()) {
+            syncServiceState()
+        } else {
+            permissionLauncher.launch(requiredPermissions)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        // 從系統設定返回時重新同步服務狀態（需求 2.7）
-        // 這確保使用者在系統設定中手動操作 Hotspot 後，
-        // App 能正確偵測並反映當前狀態
-        syncServiceState()
+        // Removed syncServiceState() call from onResume to prevent rapid
+        // start/stop loops. Service state is synced in onCreate() and when
+        // the user explicitly toggles the switch from DashboardFragment.
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(KEY_SELECTED_NAV_ITEM, bottomNavigation.selectedItemId)
+    }
+
+    /**
+     * 檢查所有必要的執行階段權限是否已授予。
+     */
+    private fun hasRequiredPermissions(): Boolean {
+        return requiredPermissions.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
     }
 
     /**
@@ -109,6 +163,13 @@ class MainActivity : AppCompatActivity() {
      * 啟動 [WifiManagerForegroundService] 並排程 WorkManager 重啟保障。
      */
     private fun startWifiManagerService() {
+        // Don't start service if required permissions are not granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            Log.w("MainActivity", "Cannot start service: location permission not granted")
+            return
+        }
+
         val serviceIntent = Intent(this, WifiManagerForegroundService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)

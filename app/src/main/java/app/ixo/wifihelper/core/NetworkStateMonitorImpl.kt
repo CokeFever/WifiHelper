@@ -88,14 +88,19 @@ class NetworkStateMonitorImpl @Inject constructor(
     override fun isWifiEnabled(): Boolean = wifiManager.isWifiEnabled
 
     override fun getCurrentWifiRssi(): Int? {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val rssi = getWifiRssiFromCapabilities()
-            if (rssi != null) return rssi
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val rssi = getWifiRssiFromCapabilities()
+                if (rssi != null) return rssi
+            }
+            @Suppress("DEPRECATION")
+            val connectionInfo = wifiManager.connectionInfo ?: return null
+            val rssi = connectionInfo.rssi
+            if (rssi == -127) null else rssi
+        } catch (e: SecurityException) {
+            Log.w(TAG, "No permission to read WiFi RSSI", e)
+            null
         }
-        @Suppress("DEPRECATION")
-        val connectionInfo = wifiManager.connectionInfo ?: return null
-        val rssi = connectionInfo.rssi
-        return if (rssi == -127) null else rssi
     }
 
     override fun cleanup() {
@@ -105,6 +110,10 @@ class NetworkStateMonitorImpl @Inject constructor(
             Log.w(TAG, "Callback was already unregistered", e)
         }
         activeNetworks.clear()
+    }
+
+    override fun refreshState() {
+        updateNetworkState()
     }
 
     private fun getWifiRssiFromCapabilities(): Int? {
@@ -150,24 +159,29 @@ class NetworkStateMonitorImpl @Inject constructor(
     }
 
     private fun getCurrentWifiSsid(): String? {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            for ((_, caps) in activeNetworks) {
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    val wifiInfo = caps.transportInfo as? WifiInfo
-                    val ssid = wifiInfo?.ssid
-                    if (ssid != null && ssid != WifiManager.UNKNOWN_SSID) {
-                        return ssid.removeSurrounding("\"")
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                for ((_, caps) in activeNetworks) {
+                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        val wifiInfo = caps.transportInfo as? WifiInfo
+                        val ssid = wifiInfo?.ssid
+                        if (ssid != null && ssid != WifiManager.UNKNOWN_SSID) {
+                            return ssid.removeSurrounding("\"")
+                        }
                     }
                 }
             }
+            @Suppress("DEPRECATION")
+            val connectionInfo = wifiManager.connectionInfo
+            val ssid = connectionInfo?.ssid
+            if (ssid != null && ssid != WifiManager.UNKNOWN_SSID) {
+                return ssid.removeSurrounding("\"")
+            }
+            null
+        } catch (e: SecurityException) {
+            Log.w(TAG, "No permission to read WiFi SSID", e)
+            null
         }
-        @Suppress("DEPRECATION")
-        val connectionInfo = wifiManager.connectionInfo
-        val ssid = connectionInfo?.ssid
-        if (ssid != null && ssid != WifiManager.UNKNOWN_SSID) {
-            return ssid.removeSurrounding("\"")
-        }
-        return null
     }
 
     private fun getMobileNetworkType(): String? {

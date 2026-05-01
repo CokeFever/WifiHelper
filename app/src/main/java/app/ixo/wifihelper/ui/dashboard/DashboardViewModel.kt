@@ -3,6 +3,7 @@ package app.ixo.wifihelper.ui.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.ixo.wifihelper.adapter.HotspotApiAdapter
+import app.ixo.wifihelper.core.NetworkStateMonitor
 import app.ixo.wifihelper.core.SmartSwitchEngine
 import app.ixo.wifihelper.data.PreferenceRepository
 import app.ixo.wifihelper.model.HotspotControlMode
@@ -48,7 +49,8 @@ data class DashboardUiState(
 class DashboardViewModel @Inject constructor(
     private val smartSwitchEngine: SmartSwitchEngine,
     private val hotspotApiAdapter: HotspotApiAdapter,
-    private val preferenceRepository: PreferenceRepository
+    private val preferenceRepository: PreferenceRepository,
+    private val networkStateMonitor: NetworkStateMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -56,21 +58,71 @@ class DashboardViewModel @Inject constructor(
 
     init {
         collectEngineState()
+        collectNetworkState()
+        loadInitialHotspotState()
+    }
+
+    /**
+     * 載入初始 Hotspot 狀態。
+     *
+     * SmartSwitchEngine 僅在掃描週期中更新 Hotspot 狀態，
+     * 因此在 ViewModel 初始化時主動讀取一次，避免 UI 顯示 UNKNOWN。
+     */
+    private fun loadInitialHotspotState() {
+        viewModelScope.launch {
+            val state = hotspotApiAdapter.getHotspotState()
+            _uiState.value = _uiState.value.copy(hotspotState = state)
+        }
+    }
+
+    /**
+     * 重新讀取 Hotspot 狀態。
+     *
+     * 供 Fragment 在 onResume 時呼叫，確保使用者從系統設定返回後
+     * UI 能反映最新的 Hotspot 狀態（需求 2.7）。
+     */
+    fun refreshHotspotState() {
+        viewModelScope.launch {
+            val state = hotspotApiAdapter.getHotspotState()
+            _uiState.value = _uiState.value.copy(hotspotState = state)
+        }
     }
 
     /**
      * 收集 [SmartSwitchEngine] 的狀態並映射為 [DashboardUiState]。
+     *
+     * 使用 copy() 更新，保留 NetworkStateMonitor 提供的 connectedSsid 和 networkMode。
+     * 引擎的 connectedSsid 僅在引擎主動連線時才有值，
+     * 而 NetworkStateMonitor 始終反映系統的實際連線狀態。
      */
     private fun collectEngineState() {
         viewModelScope.launch {
             smartSwitchEngine.getState().collect { engineState ->
-                _uiState.value = DashboardUiState(
+                _uiState.value = _uiState.value.copy(
                     smartSwitchEnabled = preferenceRepository.isSmartSwitchEnabled(),
                     hotspotState = engineState.hotspotState,
-                    networkMode = engineState.currentMode,
-                    connectedSsid = engineState.connectedSsid,
                     knownNetworksCount = engineState.knownNetworksCount,
                     isRunning = engineState.isRunning
+                )
+            }
+        }
+    }
+
+    /**
+     * 收集 [NetworkStateMonitor] 的狀態，直接反映當前網路連線狀態。
+     *
+     * 這確保即使智慧切換引擎未啟動，UI 仍能顯示正確的 WiFi 連線資訊。
+     */
+    private fun collectNetworkState() {
+        viewModelScope.launch {
+            networkStateMonitor.observeNetworkState().collect { networkState ->
+                _uiState.value = _uiState.value.copy(
+                    connectedSsid = networkState.wifiSsid,
+                    networkMode = when {
+                        networkState.isWifiConnected -> NetworkMode.WIFI_CONNECTED
+                        networkState.isMobileDataConnected -> NetworkMode.MOBILE_DATA
+                        else -> _uiState.value.networkMode
+                    }
                 )
             }
         }

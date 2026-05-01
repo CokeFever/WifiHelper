@@ -62,8 +62,10 @@ class WifiApiAdapterModern @Inject constructor(
             val currentConnection = getCurrentConnection()
             val currentSsid = currentConnection?.ssid
 
-            // API 30+ 無法直接取得已設定網路清單，
-            // 回傳所有掃描到的網路，上層邏輯可透過 WifiNetworkSuggestion 嘗試連線
+            // API 30+ cannot get saved networks list directly.
+            // getConfiguredNetworks() returns empty due to privacy restrictions.
+            // Filter: exclude open networks (unsaved) and deduplicate by SSID
+            // so that multiple access points with the same SSID count as one network.
             scanResults.mapNotNull { result ->
                 val ssid = result.SSID
                 if (ssid.isNullOrBlank()) return@mapNotNull null
@@ -78,6 +80,9 @@ class WifiApiAdapterModern @Inject constructor(
                     lastSeen = result.timestamp
                 )
             }
+            .filter { it.securityType != SecurityType.OPEN }  // Exclude open networks
+            .groupBy { it.ssid }  // Deduplicate by SSID
+            .map { (_, networks) -> networks.maxByOrNull { it.rssi }!! }  // Keep strongest signal per SSID
         }
 
     override suspend fun connectToNetwork(network: KnownWifiNetwork): ConnectionResult =

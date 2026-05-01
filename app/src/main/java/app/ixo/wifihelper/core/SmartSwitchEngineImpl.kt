@@ -172,7 +172,12 @@ class SmartSwitchEngineImpl @Inject constructor(
             return SwitchDecision.RESTORE_HOTSPOT
         }
 
-        // Rule 2: 行動數據不可用且有良好 WiFi → 關閉 Hotspot，連線 WiFi
+        // Rule 2a: 已經連上 WiFi 且訊號良好 → 維持當前狀態
+        if (currentMode == NetworkMode.WIFI_CONNECTED && bestKnownWifiRssi != null && bestKnownWifiRssi > signalThreshold) {
+            return SwitchDecision.MAINTAIN_CURRENT
+        }
+
+        // Rule 2b: 行動數據不可用且有良好 WiFi 且尚未連線 → 關閉 Hotspot，連線 WiFi
         if (!mobileDataAvailable && bestKnownWifiRssi != null && bestKnownWifiRssi > signalThreshold) {
             return SwitchDecision.CONNECT_WIFI
         }

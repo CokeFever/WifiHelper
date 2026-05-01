@@ -55,14 +55,10 @@ class WifiManagerForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(TAG, "Service onStartCommand")
 
-        // 權限驗證：確保必要權限已授予，否則停止服務
-        if (!hasRequiredPermissions()) {
-            Log.e(TAG, "Required permissions not granted, stopping service")
-            stopSelf()
-            return START_NOT_STICKY
-        }
-
-        // 使用引擎的初始狀態建構通知，立即啟動為前景服務
+        // MUST call startForeground() first to satisfy Android's contract.
+        // On Android 12+, after startForegroundService() is called, the service
+        // MUST call startForeground() within 5 seconds or the app crashes with
+        // ForegroundServiceDidNotStartInTimeException.
         val initialState = smartSwitchEngine.getState().value
         val notification = NotificationHelper.buildNotification(this, initialState)
 
@@ -74,6 +70,13 @@ class WifiManagerForegroundService : Service() {
             )
         } else {
             startForeground(NotificationHelper.NOTIFICATION_ID, notification)
+        }
+
+        // Now check permissions - if not granted, stop gracefully
+        if (!hasRequiredPermissions()) {
+            Log.e(TAG, "Required permissions not granted, stopping service")
+            stopSelf()
+            return START_NOT_STICKY
         }
 
         // 啟動智慧切換引擎

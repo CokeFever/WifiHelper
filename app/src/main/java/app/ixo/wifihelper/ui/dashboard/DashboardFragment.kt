@@ -58,6 +58,12 @@ class DashboardFragment : Fragment() {
         observeUiState()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Refresh hotspot state when returning from system settings (requirement 2.7)
+        viewModel.refreshHotspotState()
+    }
+
     /**
      * 綁定佈局中的 View 元件。
      */
@@ -80,7 +86,11 @@ class DashboardFragment : Fragment() {
         smartSwitchToggle.setOnCheckedChangeListener { _, _ ->
             viewModel.toggleSmartSwitch()
             // 通知 MainActivity 同步 Foreground Service 狀態（需求 4.1, 4.5）
-            (activity as? MainActivity)?.syncServiceState()
+            // 只在 Activity 有權限時才同步，避免無權限時觸發 Service 循環
+            val mainActivity = activity as? MainActivity
+            if (mainActivity != null) {
+                mainActivity.syncServiceState()
+            }
         }
 
         hotspotButton.setOnClickListener {

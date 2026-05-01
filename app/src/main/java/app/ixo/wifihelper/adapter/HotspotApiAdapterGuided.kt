@@ -1,10 +1,12 @@
 package app.ixo.wifihelper.adapter
 
+import android.content.Context
 import android.content.Intent
 import android.net.wifi.WifiManager
 import app.ixo.wifihelper.model.HotspotControlMode
 import app.ixo.wifihelper.model.HotspotResult
 import app.ixo.wifihelper.model.HotspotState
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -23,15 +25,20 @@ import javax.inject.Singleton
  */
 @Singleton
 class HotspotApiAdapterGuided @Inject constructor(
-    private val wifiManager: WifiManager
+    private val wifiManager: WifiManager,
+    @ApplicationContext private val context: Context
 ) : HotspotApiAdapter {
 
     companion object {
         /**
-         * 系統 Tethering 設定頁面的 Intent Action。
-         * 此為非公開 API，但在大多數 Android 裝置上可用。
+         * 系統 Tethering 設定頁面的 Intent Action（大多數裝置可用）。
          */
         private const val ACTION_TETHERING_SETTINGS = "android.settings.TETHERING_SETTINGS"
+
+        /**
+         * 部分 Samsung / 自訂 ROM 使用的 Tethering 設定 Action。
+         */
+        private const val ACTION_TETHER_SETTINGS_COMPAT = "com.android.settings.TetherSettings"
 
         /** WifiManager.WIFI_AP_STATE_ENABLED 的常數值 */
         private const val WIFI_AP_STATE_ENABLED = 13
@@ -69,16 +76,26 @@ class HotspotApiAdapterGuided @Inject constructor(
     /**
      * 建立跳轉至系統 Tethering 設定頁面的 Intent。
      *
-     * 不指定 package，讓系統自行解析對應的設定 Activity。
-     * UI 層負責處理 ActivityNotFoundException 並 fallback。
+     * 依序嘗試多個 Intent Action，使用 [context.packageManager.resolveActivity]
+     * 確認可解析後回傳。若所有 Tethering Action 皆無法解析，則 fallback 至
+     * 通用無線設定頁面（[android.provider.Settings.ACTION_WIRELESS_SETTINGS]）。
      */
     private fun createTetheringSettingsIntent(): Intent {
-        return Intent(ACTION_TETHERING_SETTINGS).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-    }
+        val candidateActions = listOf(
+            ACTION_TETHERING_SETTINGS,
+            ACTION_TETHER_SETTINGS_COMPAT
+        )
 
-    private fun fallbackWirelessSettingsIntent(): Intent {
+        for (action in candidateActions) {
+            val intent = Intent(action).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (context.packageManager.resolveActivity(intent, 0) != null) {
+                return intent
+            }
+        }
+
+        // 所有 Tethering Action 皆無法解析，fallback 至通用無線設定
         return Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }

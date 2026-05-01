@@ -12,6 +12,7 @@
     android:padding="16dp">
 
     <!-- Smart Switch Section -->
+    <!-- First element in vertical chain (packed, bias 0.5) for vertical centering -->
     <TextView
         android:id="@+id/smart_switch_label"
         android:layout_width="0dp"
@@ -20,7 +21,9 @@
         android:textColor="@color/on_background"
         android:textSize="20sp"
         android:textStyle="bold"
+        app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/smart_switch_description"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/smart_switch_toggle" />
 
@@ -44,6 +47,7 @@
         android:textSize="16sp"
         android:alpha="0.7"
         app:layout_constraintTop_toBottomOf="@id/smart_switch_label"
+        app:layout_constraintBottom_toTopOf="@id/divider_1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -56,6 +60,7 @@
         android:background="@color/on_background"
         android:alpha="0.2"
         app:layout_constraintTop_toBottomOf="@id/smart_switch_description"
+        app:layout_constraintBottom_toTopOf="@id/hotspot_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -74,6 +79,7 @@
         app:backgroundTint="@color/primary"
         app:cornerRadius="12dp"
         app:layout_constraintTop_toBottomOf="@id/divider_1"
+        app:layout_constraintBottom_toTopOf="@id/hotspot_state_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -87,6 +93,7 @@
         android:textColor="@color/on_background"
         android:textSize="16sp"
         app:layout_constraintTop_toBottomOf="@id/hotspot_button"
+        app:layout_constraintBottom_toTopOf="@id/divider_2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -99,6 +106,7 @@
         android:background="@color/on_background"
         android:alpha="0.2"
         app:layout_constraintTop_toBottomOf="@id/hotspot_state_text"
+        app:layout_constraintBottom_toTopOf="@id/wifi_status_label"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -108,11 +116,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:gravity="center"
         android:text="@string/wifi_status_label"
         android:textColor="@color/on_background"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@id/divider_2"
+        app:layout_constraintBottom_toTopOf="@id/wifi_status_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -121,10 +131,12 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
+        android:gravity="center"
         android:text="@string/wifi_disconnected"
         android:textColor="@color/on_background"
         android:textSize="16sp"
         app:layout_constraintTop_toBottomOf="@id/wifi_status_label"
+        app:layout_constraintBottom_toTopOf="@id/known_networks_label"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -134,23 +146,28 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:gravity="center"
         android:text="@string/known_networks_label"
         android:textColor="@color/on_background"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@id/wifi_status_text"
+        app:layout_constraintBottom_toTopOf="@id/known_networks_count_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Last element in vertical chain -->
     <TextView
         android:id="@+id/known_networks_count_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
+        android:gravity="center"
         android:textColor="@color/on_background"
         android:textSize="16sp"
         tools:text="偵測到 3 個已知網路"
         app:layout_constraintTop_toBottomOf="@id/known_networks_label"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

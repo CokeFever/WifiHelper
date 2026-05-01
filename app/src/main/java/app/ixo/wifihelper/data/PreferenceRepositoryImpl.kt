@@ -2,8 +2,6 @@ package app.ixo.wifihelper.data
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
 import app.ixo.wifihelper.model.UserPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +11,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * PreferenceRepository 的實作，使用 EncryptedSharedPreferences 安全儲存偏好設定。
+ * PreferenceRepository 的實作，使用 SharedPreferences 儲存偏好設定。
+ *
+ * 此 App 僅儲存兩個布林開關與一個整數門檻值，不含敏感資料（如 WiFi 密碼），
+ * 因此使用一般的 SharedPreferences 即可，避免 EncryptedSharedPreferences
+ * 存取 Android Keystore 時阻塞主執行緒導致啟動延遲。
  *
  * 內部使用 MutableStateFlow 追蹤偏好設定變更，對外暴露為不可變的 StateFlow。
  * 提供資料完整性驗證，偵測到損毀時自動重置為預設值。
@@ -32,14 +34,7 @@ class PreferenceRepositoryImpl @Inject constructor(
     }
 
     private val prefs: SharedPreferences by lazy {
-        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
-        EncryptedSharedPreferences.create(
-            PREFS_FILE_NAME,
-            masterKeyAlias,
-            context,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+        context.getSharedPreferences(PREFS_FILE_NAME, Context.MODE_PRIVATE)
     }
 
     private val _smartSwitchEnabled = MutableStateFlow(false)

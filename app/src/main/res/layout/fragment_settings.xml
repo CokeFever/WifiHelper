@@ -11,6 +11,7 @@
     android:padding="16dp">
 
     <!-- Auto Start Section -->
+    <!-- First element in vertical chain (packed, bias 0.5) for vertical centering -->
     <TextView
         android:id="@+id/auto_start_label"
         android:layout_width="0dp"
@@ -19,7 +20,9 @@
         android:textColor="@color/on_background"
         android:textSize="20sp"
         android:textStyle="bold"
+        app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/auto_start_description"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/auto_start_switch" />
 
@@ -43,6 +46,7 @@
         android:textSize="16sp"
         android:alpha="0.7"
         app:layout_constraintTop_toBottomOf="@id/auto_start_label"
+        app:layout_constraintBottom_toTopOf="@id/divider_settings"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -55,6 +59,7 @@
         android:background="@color/on_background"
         android:alpha="0.2"
         app:layout_constraintTop_toBottomOf="@id/auto_start_description"
+        app:layout_constraintBottom_toTopOf="@id/signal_threshold_label"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -69,6 +74,7 @@
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@id/divider_settings"
+        app:layout_constraintBottom_toTopOf="@id/signal_threshold_value"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -77,10 +83,12 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
+        android:gravity="center"
         android:textColor="@color/primary"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@id/signal_threshold_label"
+        app:layout_constraintBottom_toTopOf="@id/signal_threshold_seekbar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -96,9 +104,11 @@
         android:progressTint="@color/primary"
         android:progressBackgroundTint="@color/on_background"
         app:layout_constraintTop_toBottomOf="@id/signal_threshold_value"
+        app:layout_constraintBottom_toTopOf="@id/signal_threshold_description"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Last element in vertical chain -->
     <TextView
         android:id="@+id/signal_threshold_description"
         android:layout_width="0dp"
@@ -109,6 +119,7 @@
         android:textSize="16sp"
         android:alpha="0.7"
         app:layout_constraintTop_toBottomOf="@id/signal_threshold_seekbar"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

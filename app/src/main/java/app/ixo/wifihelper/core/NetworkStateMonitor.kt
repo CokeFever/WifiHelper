@@ -48,4 +48,11 @@ interface NetworkStateMonitor {
      * 應在不再需要監控時呼叫，以避免資源洩漏。
      */
     fun cleanup()
+
+    /**
+     * 強制重新讀取當前網路狀態並更新 StateFlow。
+     *
+     * 在權限授予後呼叫，確保 SSID 等需要位置權限的資訊能正確讀取。
+     */
+    fun refreshState()
 }

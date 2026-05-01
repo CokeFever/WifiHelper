@@ -2,6 +2,7 @@ package app.ixo.wifihelper.ui
 
 import app.cash.turbine.test
 import app.ixo.wifihelper.adapter.HotspotApiAdapter
+import app.ixo.wifihelper.core.NetworkStateMonitor
 import app.ixo.wifihelper.core.SmartSwitchEngine
 import app.ixo.wifihelper.data.PreferenceRepository
 import app.ixo.wifihelper.model.HotspotControlMode
@@ -72,10 +73,23 @@ class ViewModelStateTest : FunSpec({
         }
         every { preferenceRepository.isSmartSwitchEnabled() } returns smartSwitchEnabled
 
+        val networkStateMonitor = mockk<NetworkStateMonitor>(relaxed = true) {
+            every { observeNetworkState() } returns MutableStateFlow(
+                app.ixo.wifihelper.model.NetworkState(
+                    isMobileDataConnected = false,
+                    isWifiConnected = false,
+                    wifiSsid = null,
+                    wifiRssi = null,
+                    networkType = null
+                )
+            )
+        }
+
         return DashboardViewModel(
             smartSwitchEngine = engine,
             hotspotApiAdapter = hotspotApiAdapter,
-            preferenceRepository = preferenceRepository
+            preferenceRepository = preferenceRepository,
+            networkStateMonitor = networkStateMonitor
         )
     }
 
@@ -113,7 +127,12 @@ class ViewModelStateTest : FunSpec({
             val viewModel = DashboardViewModel(
                 smartSwitchEngine = engine,
                 hotspotApiAdapter = mockk(relaxed = true),
-                preferenceRepository = preferenceRepository
+                preferenceRepository = preferenceRepository,
+                networkStateMonitor = mockk(relaxed = true) {
+                    every { observeNetworkState() } returns MutableStateFlow(
+                        app.ixo.wifihelper.model.NetworkState(false, false, null, null, null)
+                    )
+                }
             )
 
             testDispatcher.scheduler.advanceUntilIdle()
@@ -140,7 +159,12 @@ class ViewModelStateTest : FunSpec({
             val viewModel = DashboardViewModel(
                 smartSwitchEngine = engine,
                 hotspotApiAdapter = mockk(relaxed = true),
-                preferenceRepository = preferenceRepository
+                preferenceRepository = preferenceRepository,
+                networkStateMonitor = mockk(relaxed = true) {
+                    every { observeNetworkState() } returns MutableStateFlow(
+                        app.ixo.wifihelper.model.NetworkState(false, false, null, null, null)
+                    )
+                }
             )
 
             testDispatcher.scheduler.advanceUntilIdle()

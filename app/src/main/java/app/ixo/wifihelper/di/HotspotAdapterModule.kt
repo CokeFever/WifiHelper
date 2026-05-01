@@ -1,5 +1,6 @@
 package app.ixo.wifihelper.di
 
+import android.content.Context
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -9,6 +10,7 @@ import app.ixo.wifihelper.adapter.HotspotApiAdapterGuided
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -28,7 +30,8 @@ object HotspotAdapterModule {
     @Singleton
     fun provideHotspotApiAdapter(
         connectivityManager: ConnectivityManager,
-        wifiManager: WifiManager
+        wifiManager: WifiManager,
+        @ApplicationContext context: Context
     ): HotspotApiAdapter {
         // Build.VERSION_CODES.S_V2 = API 32
         return if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
@@ -36,7 +39,7 @@ object HotspotAdapterModule {
             HotspotApiAdapterDirect(connectivityManager, wifiManager)
         } else {
             // API 33+：引導控制模式，透過 Intent 跳轉系統設定
-            HotspotApiAdapterGuided(wifiManager)
+            HotspotApiAdapterGuided(wifiManager, context)
         }
     }
 }
