@@ -47,11 +47,11 @@ object WifiAdapterModule {
         connectivityManager: ConnectivityManager
     ): WifiApiAdapter {
         // Build.VERSION_CODES.Q = API 29
+        // API 28-29: getConfiguredNetworks() works, use Legacy adapter
+        // API 30+: getConfiguredNetworks() returns empty, use Modern adapter
         return if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-            // API 28-29：使用 getConfiguredNetworks + enableNetwork
             WifiApiAdapterLegacy(wifiManager)
         } else {
-            // API 30+：使用 getScanResults + WifiNetworkSpecifier
             WifiApiAdapterModern(wifiManager, connectivityManager)
         }
     }

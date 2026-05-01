@@ -51,21 +51,33 @@
         android:theme="@style/Theme.AutoWifiManager"
         tools:targetApi="36">
 
-        <!-- 主畫面 Activity -->
+        <!-- 權限引導 Activity（啟動器入口） -->
         <activity
-            android:name=".ui.MainActivity"
-            android:exported="true">
+            android:name=".ui.onboarding.PermissionOnboardingActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AutoWifiManager">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- 主畫面 Activity（由權限引導完成後跳轉） -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="false" />
+
         <!-- Foreground Service 宣告，foregroundServiceType="connectedDevice" -->
         <service
             android:name=".service.WifiManagerForegroundService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
+
+        <!-- WorkManager 的 SystemForegroundService 也需要宣告 foregroundServiceType -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="connectedDevice"
+            tools:node="merge" />
 
         <!-- 開機廣播接收器：根據使用者偏好設定決定是否自動啟動服務 -->
         <receiver

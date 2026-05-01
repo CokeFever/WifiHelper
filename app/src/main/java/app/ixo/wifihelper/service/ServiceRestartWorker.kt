@@ -2,11 +2,13 @@ package app.ixo.wifihelper.service
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ForegroundInfo
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -112,12 +114,20 @@ class ServiceRestartWorker @AssistedInject constructor(
                 )
             )
             app.ixo.wifihelper.service.NotificationHelper.createNotificationChannel(applicationContext)
-            setForeground(
-                androidx.work.ForegroundInfo(
-                    app.ixo.wifihelper.service.NotificationHelper.NOTIFICATION_ID + 1,
-                    notification
+
+            val notificationId = app.ixo.wifihelper.service.NotificationHelper.NOTIFICATION_ID + 1
+            val foregroundInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // API 29+: Must specify foregroundServiceType (required on API 34+)
+                ForegroundInfo(
+                    notificationId,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
                 )
-            )
+            } else {
+                // API 28: No service type needed
+                ForegroundInfo(notificationId, notification)
+            }
+            setForeground(foregroundInfo)
 
             val serviceIntent = Intent(applicationContext, WifiManagerForegroundService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

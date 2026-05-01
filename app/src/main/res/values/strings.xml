@@ -22,6 +22,19 @@
     <string name="network_mode_label">網路模式</string>
     <string name="hotspot_settings_not_found">無法開啟 Hotspot 設定頁面，請手動前往系統設定</string>
 
+    <!-- Permission Onboarding -->
+    <string name="onboarding_title">WiFi Helper 需要以下權限才能正常運作</string>
+    <string name="onboarding_grant_permission">授予權限</string>
+    <string name="onboarding_open_settings">前往設定</string>
+    <string name="onboarding_skip">跳過</string>
+    <string name="onboarding_step_indicator">步驟 %1$d / %2$d</string>
+    <string name="onboarding_location_description">WiFi 掃描需要精確位置權限，以便偵測周圍的 WiFi 網路並自動連線。</string>
+    <string name="onboarding_background_location_description">背景 WiFi 監控需要背景位置權限，以便在 App 未開啟時仍能自動偵測 WiFi 網路。\n\n請選擇「一律允許」。</string>
+    <string name="onboarding_nearby_devices_description">WiFi 裝置探索需要鄰近裝置權限，以便掃描周圍的 WiFi 網路。</string>
+    <string name="onboarding_notifications_description">通知權限可讓 App 在狀態列顯示目前的 WiFi 連線狀態。\n\n此為選用權限，您可以跳過。</string>
+    <string name="onboarding_permission_denied_settings">此權限為 App 正常運作所必需。\n\n請點擊下方按鈕前往系統設定手動開啟權限。</string>
+    <string name="onboarding_permission_denied_retry">%1$s\n\n此權限為必要權限，請再次授予。</string>
+
     <!-- Settings -->
     <string name="auto_start_label">開機自動啟動</string>
     <string name="auto_start_description">裝置開機後自動啟動背景服務</string>

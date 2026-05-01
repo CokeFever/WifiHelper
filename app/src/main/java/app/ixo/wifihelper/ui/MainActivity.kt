@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -32,6 +31,8 @@ import javax.inject.Inject
  * 負責根據智慧切換開關狀態啟動/停止 [WifiManagerForegroundService]，
  * 並在從系統設定返回時（onResume）重新偵測狀態。
  *
+ * 權限請求已移至 PermissionOnboardingActivity，此 Activity 僅在權限已授予後才會啟動。
+ *
  * 需求：2.7, 4.1, 4.5, 6.1, 6.2
  */
 @AndroidEntryPoint
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         const val DUAL_COLUMN_BREAKPOINT_DP = 600
 
         private const val KEY_SELECTED_NAV_ITEM = "selected_nav_item"
+        private const val TAG = "MainActivity"
     }
 
     @Inject
@@ -51,39 +53,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var networkStateMonitor: NetworkStateMonitor
 
     private lateinit var bottomNavigation: BottomNavigationView
-
-    /**
-     * 需要在啟動時請求的執行階段權限清單。
-     * 根據 API 等級動態加入 Android 13+ 的權限。
-     */
-    private val requiredPermissions: Array<String>
-        get() {
-            val permissions = mutableListOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.CHANGE_WIFI_STATE,
-                Manifest.permission.ACCESS_NETWORK_STATE
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                permissions.add(Manifest.permission.NEARBY_WIFI_DEVICES)
-            }
-            return permissions.toTypedArray()
-        }
-
-    /**
-     * 權限請求結果回呼。
-     * 所有權限皆授予後才啟動服務同步。
-     */
-    private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        val allGranted = results.values.all { it }
-        if (allGranted) {
-            // 權限授予後重新讀取網路狀態（SSID 需要位置權限）
-            networkStateMonitor.refreshState()
-            syncServiceState()
-        }
-    }
 
     /**
      * 當前是否為寬螢幕模式（≥600dp）。
@@ -111,12 +80,10 @@ class MainActivity : AppCompatActivity() {
             bottomNavigation.selectedItemId = selectedId
         }
 
-        // 檢查並請求必要權限，授權後才同步服務狀態
-        if (hasRequiredPermissions()) {
-            syncServiceState()
-        } else {
-            permissionLauncher.launch(requiredPermissions)
-        }
+        // Permission onboarding has already been completed at this point.
+        // Refresh network state (SSID needs location permission) and sync service.
+        networkStateMonitor.refreshState()
+        syncServiceState()
     }
 
     override fun onResume() {
@@ -129,15 +96,6 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(KEY_SELECTED_NAV_ITEM, bottomNavigation.selectedItemId)
-    }
-
-    /**
-     * 檢查所有必要的執行階段權限是否已授予。
-     */
-    private fun hasRequiredPermissions(): Boolean {
-        return requiredPermissions.all {
-            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
-        }
     }
 
     /**
@@ -166,16 +124,12 @@ class MainActivity : AppCompatActivity() {
         // Don't start service if required permissions are not granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED) {
-            Log.w("MainActivity", "Cannot start service: location permission not granted")
+            Log.w(TAG, "Cannot start service: location permission not granted")
             return
         }
 
         val serviceIntent = Intent(this, WifiManagerForegroundService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
-        }
+        startForegroundService(serviceIntent)
 
         // 排程 WorkManager 作為服務被殺後的重啟保障
         ServiceRestartWorker.schedule(this)
