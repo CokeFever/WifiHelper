@@ -16,9 +16,6 @@
     <string name="wifi_status_label">WiFi 連線狀態</string>
     <string name="wifi_connected_format">已連線：%s</string>
     <string name="wifi_disconnected">未連線</string>
-    <string name="known_networks_label">附近 WiFi</string>
-    <string name="known_networks_count_format_connected">已連線 WiFi（附近 %d 個網路）</string>
-    <string name="known_networks_count_format_none">附近 %d 個網路</string>
     <string name="network_mode_label">網路模式</string>
     <string name="hotspot_settings_not_found">無法開啟 Hotspot 設定頁面，請手動前往系統設定</string>
 
@@ -38,7 +35,12 @@
     <!-- Settings -->
     <string name="auto_start_label">開機自動啟動</string>
     <string name="auto_start_description">裝置開機後自動啟動背景服務</string>
-    <string name="signal_threshold_label">訊號強度門檻</string>
+    <string name="signal_threshold_label">自動連線訊號要求</string>
     <string name="signal_threshold_format">%d dBm</string>
-    <string name="signal_threshold_description">WiFi 訊號強度低於此值時不自動連線（範圍：-100 至 -30 dBm）</string>
+    <string name="signal_threshold_level_weak">訊號弱也連線</string>
+    <string name="signal_threshold_level_fair">訊號普通才連線</string>
+    <string name="signal_threshold_level_good">訊號良好才連線</string>
+    <string name="signal_threshold_level_strong">訊號很強才連線</string>
+    <string name="signal_range_weak_strong">弱 ← 訊號要求 → 強</string>
+    <string name="signal_threshold_description">設定越靠右，WiFi 訊號需要越強才會自動連線</string>
 </resources>

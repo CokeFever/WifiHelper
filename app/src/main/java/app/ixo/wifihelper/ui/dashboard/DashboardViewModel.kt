@@ -31,8 +31,6 @@ data class DashboardUiState(
     val networkMode: NetworkMode = NetworkMode.DISCONNECTED,
     /** 目前連線的 WiFi SSID（null 表示未連線） */
     val connectedSsid: String? = null,
-    /** 偵測到的已知網路數量 */
-    val knownNetworksCount: Int = 0,
     /** 引擎是否正在運作 */
     val isRunning: Boolean = false
 )
@@ -50,8 +48,7 @@ class DashboardViewModel @Inject constructor(
     private val smartSwitchEngine: SmartSwitchEngine,
     private val hotspotApiAdapter: HotspotApiAdapter,
     private val preferenceRepository: PreferenceRepository,
-    private val networkStateMonitor: NetworkStateMonitor,
-    private val wifiApiAdapter: app.ixo.wifihelper.adapter.WifiApiAdapter
+    private val networkStateMonitor: NetworkStateMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -61,7 +58,6 @@ class DashboardViewModel @Inject constructor(
         collectEngineState()
         collectNetworkState()
         loadInitialHotspotState()
-        loadInitialKnownNetworks()
     }
 
     /**
@@ -71,20 +67,6 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val state = hotspotApiAdapter.getHotspotState()
             _uiState.value = _uiState.value.copy(hotspotState = state)
-        }
-    }
-
-    /**
-     * 載入初始已知網路數量。
-     */
-    private fun loadInitialKnownNetworks() {
-        viewModelScope.launch {
-            try {
-                val count = wifiApiAdapter.getKnownNetworks().size
-                _uiState.value = _uiState.value.copy(knownNetworksCount = count)
-            } catch (_: Exception) {
-                // 權限不足或其他錯誤，保持 0
-            }
         }
     }
 
@@ -119,7 +101,6 @@ class DashboardViewModel @Inject constructor(
                     } else {
                         _uiState.value.hotspotState
                     },
-                    knownNetworksCount = engineState.knownNetworksCount,
                     isRunning = engineState.isRunning
                 )
             }

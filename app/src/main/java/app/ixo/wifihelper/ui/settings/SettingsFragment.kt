@@ -48,6 +48,7 @@ class SettingsFragment : Fragment() {
     private lateinit var autoStartSwitch: SwitchMaterial
     private lateinit var signalThresholdValue: TextView
     private lateinit var signalThresholdSeekbar: SeekBar
+    private lateinit var signalRangeLabels: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -72,9 +73,11 @@ class SettingsFragment : Fragment() {
         autoStartSwitch = view.findViewById(R.id.auto_start_switch)
         signalThresholdValue = view.findViewById(R.id.signal_threshold_value)
         signalThresholdSeekbar = view.findViewById(R.id.signal_threshold_seekbar)
+        signalRangeLabels = view.findViewById(R.id.signal_range_labels)
 
         // 設定 SeekBar 範圍
         signalThresholdSeekbar.max = SEEKBAR_MAX
+        signalRangeLabels.text = getString(R.string.signal_range_weak_strong)
     }
 
     /**
@@ -132,16 +135,25 @@ class SettingsFragment : Fragment() {
             autoStartSwitch.isChecked = state.autoStartEnabled
         }
 
-        // 更新訊號強度門檻顯示值
-        signalThresholdValue.text = getString(
-            R.string.signal_threshold_format,
-            state.signalThreshold
-        )
+        // 更新訊號強度門檻顯示值（使用者友善的等級描述）
+        signalThresholdValue.text = getSignalLevelText(state.signalThreshold)
 
         // 更新 SeekBar 位置
         val seekBarProgress = state.signalThreshold - MIN_THRESHOLD
         if (signalThresholdSeekbar.progress != seekBarProgress) {
             signalThresholdSeekbar.progress = seekBarProgress
+        }
+    }
+
+    /**
+     * 將 dBm 值轉換為使用者友善的訊號等級描述。
+     */
+    private fun getSignalLevelText(thresholdDbm: Int): String {
+        return when {
+            thresholdDbm <= -85 -> getString(R.string.signal_threshold_level_weak)
+            thresholdDbm <= -70 -> getString(R.string.signal_threshold_level_fair)
+            thresholdDbm <= -55 -> getString(R.string.signal_threshold_level_good)
+            else -> getString(R.string.signal_threshold_level_strong)
         }
     }
 }

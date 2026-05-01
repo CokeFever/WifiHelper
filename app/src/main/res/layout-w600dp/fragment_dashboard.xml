@@ -143,52 +143,6 @@
         android:textColor="@color/on_background"
         android:textSize="16sp"
         app:layout_constraintTop_toBottomOf="@id/wifi_status_label"
-        app:layout_constraintBottom_toTopOf="@id/divider_2"
-        app:layout_constraintStart_toEndOf="@id/guideline_center"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Divider (right column) -->
-    <View
-        android:id="@+id/divider_2"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:background="@color/on_background"
-        android:alpha="0.2"
-        app:layout_constraintTop_toBottomOf="@id/wifi_status_text"
-        app:layout_constraintBottom_toTopOf="@id/known_networks_label"
-        app:layout_constraintStart_toEndOf="@id/guideline_center"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Known Networks Count -->
-    <TextView
-        android:id="@+id/known_networks_label"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:gravity="center"
-        android:text="@string/known_networks_label"
-        android:textColor="@color/on_background"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/divider_2"
-        app:layout_constraintBottom_toTopOf="@id/known_networks_count_text"
-        app:layout_constraintStart_toEndOf="@id/guideline_center"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <TextView
-        android:id="@+id/known_networks_count_text"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginStart="16dp"
-        android:gravity="center"
-        android:textColor="@color/on_background"
-        android:textSize="16sp"
-        tools:text="偵測到 3 個已知網路"
-        app:layout_constraintTop_toBottomOf="@id/known_networks_label"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/guideline_center"
         app:layout_constraintEnd_toEndOf="parent" />

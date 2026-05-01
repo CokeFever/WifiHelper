@@ -40,7 +40,6 @@ class DashboardFragment : Fragment() {
     private lateinit var hotspotButton: MaterialButton
     private lateinit var hotspotStateText: TextView
     private lateinit var wifiStatusText: TextView
-    private lateinit var knownNetworksCountText: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -72,7 +71,6 @@ class DashboardFragment : Fragment() {
         hotspotButton = view.findViewById(R.id.hotspot_button)
         hotspotStateText = view.findViewById(R.id.hotspot_state_text)
         wifiStatusText = view.findViewById(R.id.wifi_status_text)
-        knownNetworksCountText = view.findViewById(R.id.known_networks_count_text)
     }
 
     /**
@@ -135,13 +133,6 @@ class DashboardFragment : Fragment() {
             getString(R.string.wifi_connected_format, state.connectedSsid)
         } else {
             getString(R.string.wifi_disconnected)
-        }
-
-        // 更新附近網路數量
-        knownNetworksCountText.text = if (state.connectedSsid != null) {
-            getString(R.string.known_networks_count_format_connected, state.knownNetworksCount)
-        } else {
-            getString(R.string.known_networks_count_format_none, state.knownNetworksCount)
         }
     }
 

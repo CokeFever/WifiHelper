@@ -104,6 +104,20 @@
         android:progressTint="@color/primary"
         android:progressBackgroundTint="@color/on_background"
         app:layout_constraintTop_toBottomOf="@id/signal_threshold_value"
+        app:layout_constraintBottom_toTopOf="@id/signal_range_labels"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Weak / Strong labels under SeekBar -->
+    <TextView
+        android:id="@+id/signal_range_labels"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/on_background"
+        android:textSize="14sp"
+        android:alpha="0.5"
+        app:layout_constraintTop_toBottomOf="@id/signal_threshold_seekbar"
         app:layout_constraintBottom_toTopOf="@id/signal_threshold_description"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
