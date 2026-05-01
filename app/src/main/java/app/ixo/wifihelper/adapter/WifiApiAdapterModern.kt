@@ -80,9 +80,9 @@ class WifiApiAdapterModern @Inject constructor(
                     lastSeen = result.timestamp
                 )
             }
-            .filter { it.securityType != SecurityType.OPEN }  // Exclude open networks
-            .groupBy { it.ssid }  // Deduplicate by SSID
-            .map { (_, networks) -> networks.maxByOrNull { it.rssi }!! }  // Keep strongest signal per SSID
+            .filter { it.securityType != SecurityType.OPEN }
+            .groupBy { it.ssid }
+            .map { (_, networks) -> networks.maxByOrNull { it.rssi }!! }
         }
 
     override suspend fun connectToNetwork(network: KnownWifiNetwork): ConnectionResult =

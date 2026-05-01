@@ -16,9 +16,9 @@
     <string name="wifi_status_label">WiFi 連線狀態</string>
     <string name="wifi_connected_format">已連線：%s</string>
     <string name="wifi_disconnected">未連線</string>
-    <string name="known_networks_label">可連線網路</string>
-    <string name="known_networks_count_format_connected">已連線 WiFi（附近偵測到 %d 個網路）</string>
-    <string name="known_networks_count_format_none">附近偵測到 %d 個網路</string>
+    <string name="known_networks_label">附近 WiFi</string>
+    <string name="known_networks_count_format_connected">已連線 WiFi（附近 %d 個網路）</string>
+    <string name="known_networks_count_format_none">附近 %d 個網路</string>
     <string name="network_mode_label">網路模式</string>
     <string name="hotspot_settings_not_found">無法開啟 Hotspot 設定頁面，請手動前往系統設定</string>
 
