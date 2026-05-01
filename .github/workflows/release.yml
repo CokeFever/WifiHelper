@@ -39,6 +39,8 @@ jobs:
     name: Build Release
     needs: test
     runs-on: ubuntu-latest
+    env:
+      HAS_SIGNING_SECRETS: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -63,30 +65,39 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Decode keystore
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        if: env.HAS_SIGNING_SECRETS == 'true'
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/keystore.jks
 
-      - name: Build & Sign Release APK
+      - name: Build Release APK (signed)
+        if: env.HAS_SIGNING_SECRETS == 'true'
         run: ./gradlew assembleRelease
         env:
-          KEYSTORE_FILE: ${{ secrets.KEYSTORE_BASE64 != '' && 'keystore.jks' || '' }}
+          KEYSTORE_FILE: keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Build & Sign Release AAB (App Bundle)
+      - name: Build Release APK (unsigned fallback)
+        if: env.HAS_SIGNING_SECRETS != 'true'
+        run: ./gradlew assembleRelease
+
+      - name: Build Release AAB (signed)
+        if: env.HAS_SIGNING_SECRETS == 'true'
         run: ./gradlew bundleRelease
         env:
-          KEYSTORE_FILE: ${{ secrets.KEYSTORE_BASE64 != '' && 'keystore.jks' || '' }}
+          KEYSTORE_FILE: keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Build Release AAB (unsigned fallback)
+        if: env.HAS_SIGNING_SECRETS != 'true'
+        run: ./gradlew bundleRelease
 
       - name: Rename artifacts
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/WifiHelper-${VERSION}-debug.apk
-          # Release APK may be signed or debug-signed depending on secrets availability
           RELEASE_APK=$(find app/build/outputs/apk/release/ -name "*.apk" | head -1)
           if [ -n "$RELEASE_APK" ]; then
             cp "$RELEASE_APK" app/build/outputs/apk/release/WifiHelper-${VERSION}.apk
