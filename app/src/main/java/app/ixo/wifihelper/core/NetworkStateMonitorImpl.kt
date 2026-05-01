@@ -44,10 +44,10 @@ class NetworkStateMonitorImpl @Inject constructor(
     private val wifiManager: WifiManager =
         context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-    private val _networkState = MutableStateFlow(buildCurrentNetworkState())
-
     /** 使用 ConcurrentHashMap 確保多執行緒存取安全 */
     private val activeNetworks = ConcurrentHashMap<Network, NetworkCapabilities>()
+
+    private val _networkState = MutableStateFlow(buildCurrentNetworkState())
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
