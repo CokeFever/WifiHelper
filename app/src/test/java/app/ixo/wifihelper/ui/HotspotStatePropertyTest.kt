@@ -87,7 +87,6 @@ class HotspotStatePropertyTest : FunSpec({
                 hotspotState = engineState.hotspotState,
                 networkMode = engineState.currentMode,
                 connectedSsid = engineState.connectedSsid,
-                knownNetworksCount = engineState.knownNetworksCount,
                 isRunning = engineState.isRunning
             )
 
@@ -122,7 +121,6 @@ class HotspotStatePropertyTest : FunSpec({
                 hotspotState = updatedEngineState.hotspotState,
                 networkMode = updatedEngineState.currentMode,
                 connectedSsid = updatedEngineState.connectedSsid,
-                knownNetworksCount = updatedEngineState.knownNetworksCount,
                 isRunning = updatedEngineState.isRunning
             )
 
@@ -141,14 +139,12 @@ class HotspotStatePropertyTest : FunSpec({
                 hotspotState = engineState.hotspotState,
                 networkMode = engineState.currentMode,
                 connectedSsid = engineState.connectedSsid,
-                knownNetworksCount = engineState.knownNetworksCount,
                 isRunning = engineState.isRunning
             )
 
             uiState.hotspotState == engineState.hotspotState &&
                 uiState.networkMode == engineState.currentMode &&
                 uiState.connectedSsid == engineState.connectedSsid &&
-                uiState.knownNetworksCount == engineState.knownNetworksCount &&
                 uiState.isRunning == engineState.isRunning
         }
     }

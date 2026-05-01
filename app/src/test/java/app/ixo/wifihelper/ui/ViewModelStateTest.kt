@@ -194,8 +194,7 @@ class ViewModelStateTest : FunSpec({
                 engineStateFlow.value = defaultEngineState().copy(
                     isRunning = true,
                     currentMode = NetworkMode.WIFI_CONNECTED,
-                    connectedSsid = "TestNetwork",
-                    knownNetworksCount = 3
+                    connectedSsid = "TestNetwork"
                 )
 
                 testDispatcher.scheduler.advanceUntilIdle()
@@ -203,7 +202,6 @@ class ViewModelStateTest : FunSpec({
                 val updated = awaitItem()
                 updated.networkMode shouldBe NetworkMode.WIFI_CONNECTED
                 updated.connectedSsid shouldBe "TestNetwork"
-                updated.knownNetworksCount shouldBe 3
 
                 cancelAndIgnoreRemainingEvents()
             }
