@@ -69,13 +69,18 @@ class HotspotApiAdapterGuided @Inject constructor(
     /**
      * 建立跳轉至系統 Tethering 設定頁面的 Intent。
      *
-     * 使用 `android.settings.TETHERING_SETTINGS` Action，若裝置不支援
-     * 則 fallback 至 `android.settings.WIRELESS_SETTINGS`。
+     * 不指定 package，讓系統自行解析對應的設定 Activity。
+     * UI 層負責處理 ActivityNotFoundException 並 fallback。
      */
     private fun createTetheringSettingsIntent(): Intent {
         return Intent(ACTION_TETHERING_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            setPackage("com.android.settings")
+        }
+    }
+
+    private fun fallbackWirelessSettingsIntent(): Intent {
+        return Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
     }
 

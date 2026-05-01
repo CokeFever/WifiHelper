@@ -19,6 +19,7 @@
     <string name="known_networks_label">已知網路</string>
     <string name="known_networks_count_format">偵測到 %d 個已知網路</string>
     <string name="network_mode_label">網路模式</string>
+    <string name="hotspot_settings_not_found">無法開啟 Hotspot 設定頁面，請手動前往系統設定</string>
 
     <!-- Settings -->
     <string name="auto_start_label">開機自動啟動</string>

@@ -149,7 +149,22 @@ class DashboardFragment : Fragment() {
                 // UI 會透過 StateFlow 自動更新
             }
             is HotspotResult.NeedUserAction -> {
-                startActivity(result.intent)
+                try {
+                    startActivity(result.intent)
+                } catch (e: android.content.ActivityNotFoundException) {
+                    // Fallback 至通用無線設定頁面
+                    try {
+                        startActivity(
+                            android.content.Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS)
+                        )
+                    } catch (e2: android.content.ActivityNotFoundException) {
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.hotspot_settings_not_found),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             }
             is HotspotResult.Failure -> {
                 Toast.makeText(
