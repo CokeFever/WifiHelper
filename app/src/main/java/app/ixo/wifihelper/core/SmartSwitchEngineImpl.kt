@@ -1,6 +1,7 @@
 package app.ixo.wifihelper.core
 
 import android.util.Log
+import app.ixo.wifihelper.BuildConfig
 import app.ixo.wifihelper.adapter.HotspotApiAdapter
 import app.ixo.wifihelper.adapter.WifiApiAdapter
 import app.ixo.wifihelper.data.PreferenceRepository
@@ -95,7 +96,7 @@ class SmartSwitchEngineImpl @Inject constructor(
 
     override fun start() {
         if (scanJob?.isActive == true) {
-            Log.d(TAG, "Engine already running, ignoring start()")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Engine already running, ignoring start()")
             return
         }
 
@@ -127,12 +128,12 @@ class SmartSwitchEngineImpl @Inject constructor(
     }
 
     override fun excludeSsid(ssid: String) {
-        Log.d(TAG, "Excluding SSID: $ssid")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Excluding SSID: $ssid")
         excludedSsids.add(ssid)
     }
 
     override fun resetExclusions() {
-        Log.d(TAG, "Resetting all SSID exclusions")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Resetting all SSID exclusions")
         excludedSsids.clear()
     }
 
@@ -203,7 +204,7 @@ class SmartSwitchEngineImpl @Inject constructor(
         updateState { copy(mobileDataAvailable = mobileDataAvailable) }
 
         if (!smartSwitchEnabled) {
-            Log.d(TAG, "Smart switch disabled, skipping scan cycle")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Smart switch disabled, skipping scan cycle")
             updateState { copy(lastScanTime = System.currentTimeMillis()) }
             return
         }
@@ -251,11 +252,13 @@ class SmartSwitchEngineImpl @Inject constructor(
             currentMode = currentMode
         )
 
-        Log.d(
-            TAG,
-            "Decision: $decision (mobile=$mobileDataAvailable, bestRssi=$bestRssi, " +
-                "threshold=$signalThreshold, mode=$currentMode)"
-        )
+        if (BuildConfig.DEBUG) {
+            Log.d(
+                TAG,
+                "Decision: $decision (mobile=$mobileDataAvailable, bestRssi=$bestRssi, " +
+                    "threshold=$signalThreshold, mode=$currentMode)"
+            )
+        }
 
         // 執行決策
         executeDecision(decision, bestNetwork?.ssid)
@@ -279,11 +282,11 @@ class SmartSwitchEngineImpl @Inject constructor(
             }
 
             SwitchDecision.NO_ACTION -> {
-                Log.d(TAG, "No action required")
+                if (BuildConfig.DEBUG) Log.d(TAG, "No action required")
             }
 
             SwitchDecision.MAINTAIN_CURRENT -> {
-                Log.d(TAG, "Maintaining current state")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Maintaining current state")
             }
         }
     }
@@ -397,7 +400,7 @@ class SmartSwitchEngineImpl @Inject constructor(
         val count = (failureCounters[ssid] ?: 0) + 1
         failureCounters[ssid] = count
         lastFailureTime[ssid] = timeProvider()
-        Log.d(TAG, "Failure recorded for $ssid: $count consecutive failures")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Failure recorded for $ssid: $count consecutive failures")
 
         if (count >= FAILURE_BLOCK_THRESHOLD) {
             blockedSsids.add(ssid)

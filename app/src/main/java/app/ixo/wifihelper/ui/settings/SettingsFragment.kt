@@ -49,6 +49,7 @@ class SettingsFragment : Fragment() {
     private lateinit var signalThresholdValue: TextView
     private lateinit var signalThresholdSeekbar: SeekBar
     private lateinit var signalRangeLabels: TextView
+    private lateinit var footerText: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,10 +75,14 @@ class SettingsFragment : Fragment() {
         signalThresholdValue = view.findViewById(R.id.signal_threshold_value)
         signalThresholdSeekbar = view.findViewById(R.id.signal_threshold_seekbar)
         signalRangeLabels = view.findViewById(R.id.signal_range_labels)
+        footerText = view.findViewById(R.id.footer_text)
 
         // 設定 SeekBar 範圍
         signalThresholdSeekbar.max = SEEKBAR_MAX
         signalRangeLabels.text = getString(R.string.signal_range_weak_strong)
+
+        // 設定 footer：版號 + 可點擊的官網連結
+        setupFooter()
     }
 
     /**
@@ -155,5 +160,47 @@ class SettingsFragment : Fragment() {
             thresholdDbm <= -55 -> getString(R.string.signal_threshold_level_good)
             else -> getString(R.string.signal_threshold_level_strong)
         }
+    }
+
+    /**
+     * 設定 footer 文字：版號 + 可點擊的官網連結。
+     */
+    private fun setupFooter() {
+        val versionName = try {
+            requireContext().packageManager
+                .getPackageInfo(requireContext().packageName, 0).versionName ?: "0.0.0"
+        } catch (_: Exception) {
+            "0.0.0"
+        }
+
+        val text = "v$versionName by ixo.app"
+        val spannable = android.text.SpannableString(text)
+
+        // 讓 "ixo.app" 可點擊
+        val linkStart = text.indexOf("ixo.app")
+        if (linkStart >= 0) {
+            spannable.setSpan(
+                object : android.text.style.ClickableSpan() {
+                    override fun onClick(widget: android.view.View) {
+                        val intent = android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse("https://ixo.app")
+                        )
+                        startActivity(intent)
+                    }
+
+                    override fun updateDrawState(ds: android.text.TextPaint) {
+                        super.updateDrawState(ds)
+                        ds.isUnderlineText = true
+                    }
+                },
+                linkStart,
+                linkStart + "ixo.app".length,
+                android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        footerText.text = spannable
+        footerText.movementMethod = android.text.method.LinkMovementMethod.getInstance()
     }
 }

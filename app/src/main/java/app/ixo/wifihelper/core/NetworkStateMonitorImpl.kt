@@ -133,9 +133,6 @@ class NetworkStateMonitorImpl @Inject constructor(
             Log.d(TAG, "NetworkState updated: mobile=${newState.isMobileDataConnected}, " +
                 "wifi=${newState.isWifiConnected}, ssid=${newState.wifiSsid}, " +
                 "rssi=${newState.wifiRssi}, type=${newState.networkType}")
-        } else {
-            Log.d(TAG, "NetworkState updated: mobile=${newState.isMobileDataConnected}, " +
-                "wifi=${newState.isWifiConnected}")
         }
     }
 

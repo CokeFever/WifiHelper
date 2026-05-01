@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -37,7 +36,6 @@ import dagger.hilt.android.AndroidEntryPoint
 class PermissionOnboardingActivity : AppCompatActivity() {
 
     companion object {
-        private const val TAG = "PermissionOnboarding"
         private const val PREFS_NAME = "permission_onboarding"
         private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
     }
@@ -65,7 +63,6 @@ class PermissionOnboardingActivity : AppCompatActivity() {
     private val singlePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        Log.d(TAG, "Permission result for step $currentStep: granted=$granted")
         if (granted) {
             advanceToNextStep()
         } else {
@@ -267,7 +264,6 @@ class PermissionOnboardingActivity : AppCompatActivity() {
     private fun handleSkip() {
         val step = permissionSteps.getOrNull(currentStep) ?: return
         if (step.isOptional) {
-            Log.d(TAG, "Skipping optional permission: ${step.permission}")
             advanceToNextStep()
         }
     }
