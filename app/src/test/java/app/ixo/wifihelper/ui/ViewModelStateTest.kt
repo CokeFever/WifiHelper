@@ -179,9 +179,33 @@ class ViewModelStateTest : FunSpec({
         test("UI state updates when engine state changes") {
             // **Validates: Requirements 2.5, 4.1**
             val engineStateFlow = MutableStateFlow(defaultEngineState())
-            val viewModel = createDashboardViewModel(
-                engineStateFlow = engineStateFlow,
-                smartSwitchEnabled = true
+            val networkStateFlow = MutableStateFlow(
+                app.ixo.wifihelper.model.NetworkState(
+                    isMobileDataConnected = false,
+                    isWifiConnected = false,
+                    wifiSsid = null,
+                    wifiRssi = null,
+                    networkType = null
+                )
+            )
+            val engine = mockk<SmartSwitchEngine>(relaxed = true) {
+                every { getState() } returns engineStateFlow
+            }
+            val hotspotApiAdapter = mockk<HotspotApiAdapter>(relaxed = true) {
+                coEvery { getHotspotState() } returns HotspotState.UNKNOWN
+            }
+            val preferenceRepository = mockk<PreferenceRepository>(relaxed = true) {
+                every { isSmartSwitchEnabled() } returns true
+            }
+            val networkStateMonitor = mockk<NetworkStateMonitor>(relaxed = true) {
+                every { observeNetworkState() } returns networkStateFlow
+            }
+
+            val viewModel = DashboardViewModel(
+                smartSwitchEngine = engine,
+                hotspotApiAdapter = hotspotApiAdapter,
+                preferenceRepository = preferenceRepository,
+                networkStateMonitor = networkStateMonitor
             )
 
             testDispatcher.scheduler.advanceUntilIdle()
@@ -196,10 +220,23 @@ class ViewModelStateTest : FunSpec({
                     currentMode = NetworkMode.WIFI_CONNECTED,
                     connectedSsid = "TestNetwork"
                 )
+                // 同時更新網路狀態（networkMode 由 NetworkStateMonitor 驅動）
+                networkStateFlow.value = app.ixo.wifihelper.model.NetworkState(
+                    isMobileDataConnected = false,
+                    isWifiConnected = true,
+                    wifiSsid = "TestNetwork",
+                    wifiRssi = -50,
+                    networkType = "WiFi"
+                )
 
                 testDispatcher.scheduler.advanceUntilIdle()
 
-                val updated = awaitItem()
+                // 引擎狀態和網路狀態分別觸發 UI 更新，可能產生多次發射
+                // 跳過中間狀態，取得最終穩定狀態
+                var updated = awaitItem()
+                if (updated.networkMode != NetworkMode.WIFI_CONNECTED) {
+                    updated = awaitItem()
+                }
                 updated.networkMode shouldBe NetworkMode.WIFI_CONNECTED
                 updated.connectedSsid shouldBe "TestNetwork"
 
@@ -217,6 +254,7 @@ class ViewModelStateTest : FunSpec({
             val hotspotApiAdapter = mockk<HotspotApiAdapter>(relaxed = true) {
                 every { getControlMode() } returns HotspotControlMode.DIRECT
                 coEvery { enableHotspot() } returns HotspotResult.Success
+                coEvery { getHotspotState() } returns HotspotState.DISABLED
             }
 
             val engineStateFlow = MutableStateFlow(
@@ -241,6 +279,7 @@ class ViewModelStateTest : FunSpec({
             val hotspotApiAdapter = mockk<HotspotApiAdapter>(relaxed = true) {
                 every { getControlMode() } returns HotspotControlMode.DIRECT
                 coEvery { disableHotspot() } returns HotspotResult.Success
+                coEvery { getHotspotState() } returns HotspotState.ENABLED
             }
 
             val engineStateFlow = MutableStateFlow(
@@ -266,6 +305,7 @@ class ViewModelStateTest : FunSpec({
             val hotspotApiAdapter = mockk<HotspotApiAdapter>(relaxed = true) {
                 every { getControlMode() } returns HotspotControlMode.GUIDED
                 coEvery { enableHotspot() } returns HotspotResult.NeedUserAction(mockIntent)
+                coEvery { getHotspotState() } returns HotspotState.DISABLED
             }
 
             val engineStateFlow = MutableStateFlow(
@@ -292,6 +332,7 @@ class ViewModelStateTest : FunSpec({
             val hotspotApiAdapter = mockk<HotspotApiAdapter>(relaxed = true) {
                 every { getControlMode() } returns HotspotControlMode.DIRECT
                 coEvery { enableHotspot() } returns HotspotResult.Failure("Reflection failed")
+                coEvery { getHotspotState() } returns HotspotState.DISABLED
             }
 
             val engineStateFlow = MutableStateFlow(
@@ -317,8 +358,14 @@ class ViewModelStateTest : FunSpec({
             val engineStateFlow = MutableStateFlow(
                 defaultEngineState().copy(hotspotState = HotspotState.DISABLED)
             )
+            val hotspotApiAdapter = mockk<HotspotApiAdapter>(relaxed = true) {
+                coEvery { getHotspotState() } returns HotspotState.DISABLED
+            }
 
-            val viewModel = createDashboardViewModel(engineStateFlow = engineStateFlow)
+            val viewModel = createDashboardViewModel(
+                engineStateFlow = engineStateFlow,
+                hotspotApiAdapter = hotspotApiAdapter
+            )
 
             testDispatcher.scheduler.advanceUntilIdle()
 

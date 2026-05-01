@@ -128,8 +128,8 @@ class SmartSwitchEngineStateMachineTest : FunSpec({
                 signalThreshold = -70,
                 currentMode = NetworkMode.WIFI_CONNECTED
             )
-            // 行動數據不可用且已連線 WiFi → 繼續連線 WiFi（CONNECT_WIFI）
-            connectedDecision shouldBe SwitchDecision.CONNECT_WIFI
+            // 已連上 WiFi 且訊號良好 → 維持當前狀態（Rule 2a）
+            connectedDecision shouldBe SwitchDecision.MAINTAIN_CURRENT
         }
     }
 
@@ -322,8 +322,8 @@ class SmartSwitchEngineStateMachineTest : FunSpec({
                 signalThreshold = -70,
                 currentMode = NetworkMode.WIFI_CONNECTED
             )
-            // 行動數據不可用且已連線 WiFi → 繼續連線
-            activeDecision shouldBe SwitchDecision.CONNECT_WIFI
+            // 已連上 WiFi 且訊號良好 → 維持當前狀態（Rule 2a）
+            activeDecision shouldBe SwitchDecision.MAINTAIN_CURRENT
 
             // Step 2: 使用者停用智慧切換
             val disabledDecision = engine.makeDecision(

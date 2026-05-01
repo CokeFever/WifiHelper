@@ -234,7 +234,7 @@ class IntegrationTest : FunSpec({
             )
             decision2 shouldBe SwitchDecision.CONNECT_WIFI
 
-            // Phase 3: WiFi 已連線，行動數據仍不可用 → 維持 WiFi
+            // Phase 3: WiFi 已連線，行動數據仍不可用 → 維持當前狀態（Rule 2a）
             val decision3 = engine.makeDecision(
                 smartSwitchEnabled = true,
                 mobileDataAvailable = false,
@@ -242,7 +242,7 @@ class IntegrationTest : FunSpec({
                 signalThreshold = -70,
                 currentMode = NetworkMode.WIFI_CONNECTED
             )
-            decision3 shouldBe SwitchDecision.CONNECT_WIFI
+            decision3 shouldBe SwitchDecision.MAINTAIN_CURRENT
 
             // Phase 4: 行動數據恢復，當前為 WiFi 連線 → 恢復 Hotspot
             val decision4 = engine.makeDecision(

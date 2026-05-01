@@ -88,9 +88,13 @@ class SmartSwitchDecisionPropertyTest : FunSpec({
                 currentMode = currentMode
             )
 
-            // 注意：若 currentMode == WIFI_CONNECTED 且 mobileDataAvailable == false，
-            // Rule 3 不適用（因為 mobileDataAvailable = false），所以 Rule 2 生效
-            decision == SwitchDecision.CONNECT_WIFI
+            // Rule 2a: 若已連上 WiFi 且訊號良好 → MAINTAIN_CURRENT（不需重複連線）
+            // Rule 2b: 尚未連線 WiFi 且有良好訊號 → CONNECT_WIFI
+            if (currentMode == NetworkMode.WIFI_CONNECTED) {
+                decision == SwitchDecision.MAINTAIN_CURRENT
+            } else {
+                decision == SwitchDecision.CONNECT_WIFI
+            }
         }
     }
 
@@ -204,7 +208,11 @@ class SmartSwitchDecisionPropertyTest : FunSpec({
                 mobileDataAvailable && currentMode == NetworkMode.WIFI_CONNECTED ->
                     SwitchDecision.RESTORE_HOTSPOT
 
-                // Rule 2: 行動數據不可用且有良好 WiFi → 連線 WiFi
+                // Rule 2a: 已連上 WiFi 且訊號良好 → 維持當前狀態
+                currentMode == NetworkMode.WIFI_CONNECTED && bestKnownWifiRssi != null && bestKnownWifiRssi > signalThreshold ->
+                    SwitchDecision.MAINTAIN_CURRENT
+
+                // Rule 2b: 行動數據不可用且有良好 WiFi 且尚未連線 → 連線 WiFi
                 !mobileDataAvailable && bestKnownWifiRssi != null && bestKnownWifiRssi > signalThreshold ->
                     SwitchDecision.CONNECT_WIFI
 
