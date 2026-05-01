@@ -44,11 +44,6 @@ class ServiceRestartWorker @AssistedInject constructor(
 
         /**
          * 排程服務重啟的週期性工作。
-         *
-         * 使用 [ExistingPeriodicWorkPolicy.KEEP] 確保不會重複排程：
-         * 若已有同名工作在排程中，則保留現有工作不建立新的。
-         *
-         * @param context 應用程式 Context
          */
         fun schedule(context: Context) {
             val workRequest = PeriodicWorkRequestBuilder<ServiceRestartWorker>(
@@ -62,6 +57,18 @@ class ServiceRestartWorker @AssistedInject constructor(
             )
 
             Log.i(TAG, "Scheduled periodic service restart work (interval: ${REPEAT_INTERVAL_MINUTES}min)")
+        }
+
+        /**
+         * 立即排程一次性工作以啟動服務（用於開機自動啟動）。
+         */
+        fun scheduleImmediate(context: Context) {
+            val workRequest = androidx.work.OneTimeWorkRequestBuilder<ServiceRestartWorker>()
+                .setExpedited(androidx.work.OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                .build()
+
+            WorkManager.getInstance(context).enqueue(workRequest)
+            Log.i(TAG, "Scheduled immediate service start work")
         }
 
         /**
@@ -90,6 +97,28 @@ class ServiceRestartWorker @AssistedInject constructor(
             "(smartSwitch=$smartSwitchEnabled, autoStart=$autoStartEnabled)")
 
         try {
+            // 使用 setForeground() 提升為前景工作，避免 Android 12+ 的背景啟動限制
+            val notification = app.ixo.wifihelper.service.NotificationHelper.buildNotification(
+                applicationContext,
+                app.ixo.wifihelper.model.SmartSwitchState(
+                    isRunning = false,
+                    currentMode = app.ixo.wifihelper.model.NetworkMode.DISCONNECTED,
+                    lastScanTime = 0L,
+                    connectedSsid = null,
+                    hotspotState = app.ixo.wifihelper.model.HotspotState.UNKNOWN,
+                    mobileDataAvailable = false,
+                    knownNetworksCount = 0,
+                    failedAttempts = emptyMap()
+                )
+            )
+            app.ixo.wifihelper.service.NotificationHelper.createNotificationChannel(applicationContext)
+            setForeground(
+                androidx.work.ForegroundInfo(
+                    app.ixo.wifihelper.service.NotificationHelper.NOTIFICATION_ID + 1,
+                    notification
+                )
+            )
+
             val serviceIntent = Intent(applicationContext, WifiManagerForegroundService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 applicationContext.startForegroundService(serviceIntent)

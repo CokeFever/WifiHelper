@@ -83,14 +83,12 @@ class DashboardFragment : Fragment() {
      * - Hotspot 按鈕：呼叫 [DashboardViewModel.toggleHotspot]，處理操作結果
      */
     private fun setupEventHandlers() {
-        smartSwitchToggle.setOnCheckedChangeListener { _, _ ->
+        smartSwitchToggle.setOnCheckedChangeListener { _, isChecked ->
+            // 只在使用者手動操作時觸發（避免 updateUi 設值時重複觸發）
+            if (isChecked == viewModel.uiState.value.smartSwitchEnabled) return@setOnCheckedChangeListener
+
             viewModel.toggleSmartSwitch()
-            // 通知 MainActivity 同步 Foreground Service 狀態（需求 4.1, 4.5）
-            // 只在 Activity 有權限時才同步，避免無權限時觸發 Service 循環
-            val mainActivity = activity as? MainActivity
-            if (mainActivity != null) {
-                mainActivity.syncServiceState()
-            }
+            (activity as? MainActivity)?.syncServiceState()
         }
 
         hotspotButton.setOnClickListener {
@@ -139,11 +137,12 @@ class DashboardFragment : Fragment() {
             getString(R.string.wifi_disconnected)
         }
 
-        // 更新已知網路數量
-        knownNetworksCountText.text = getString(
-            R.string.known_networks_count_format,
-            state.knownNetworksCount
-        )
+        // 更新附近網路數量
+        knownNetworksCountText.text = if (state.connectedSsid != null) {
+            getString(R.string.known_networks_count_format_connected, state.knownNetworksCount)
+        } else {
+            getString(R.string.known_networks_count_format_none, state.knownNetworksCount)
+        }
     }
 
     /**

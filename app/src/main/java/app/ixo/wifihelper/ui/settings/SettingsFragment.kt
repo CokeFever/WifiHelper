@@ -84,7 +84,9 @@ class SettingsFragment : Fragment() {
      * - 訊號強度門檻 SeekBar：呼叫 [SettingsViewModel.setSignalThreshold]
      */
     private fun setupEventHandlers() {
-        autoStartSwitch.setOnCheckedChangeListener { _, _ ->
+        autoStartSwitch.setOnCheckedChangeListener { _, isChecked ->
+            // 只在使用者手動操作時觸發（避免 updateUi 設值時重複觸發）
+            if (isChecked == viewModel.uiState.value.autoStartEnabled) return@setOnCheckedChangeListener
             viewModel.toggleAutoStart()
         }
 

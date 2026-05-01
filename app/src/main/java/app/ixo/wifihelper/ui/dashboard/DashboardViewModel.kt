@@ -50,7 +50,8 @@ class DashboardViewModel @Inject constructor(
     private val smartSwitchEngine: SmartSwitchEngine,
     private val hotspotApiAdapter: HotspotApiAdapter,
     private val preferenceRepository: PreferenceRepository,
-    private val networkStateMonitor: NetworkStateMonitor
+    private val networkStateMonitor: NetworkStateMonitor,
+    private val wifiApiAdapter: app.ixo.wifihelper.adapter.WifiApiAdapter
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -60,18 +61,30 @@ class DashboardViewModel @Inject constructor(
         collectEngineState()
         collectNetworkState()
         loadInitialHotspotState()
+        loadInitialKnownNetworks()
     }
 
     /**
      * 載入初始 Hotspot 狀態。
-     *
-     * SmartSwitchEngine 僅在掃描週期中更新 Hotspot 狀態，
-     * 因此在 ViewModel 初始化時主動讀取一次，避免 UI 顯示 UNKNOWN。
      */
     private fun loadInitialHotspotState() {
         viewModelScope.launch {
             val state = hotspotApiAdapter.getHotspotState()
             _uiState.value = _uiState.value.copy(hotspotState = state)
+        }
+    }
+
+    /**
+     * 載入初始已知網路數量。
+     */
+    private fun loadInitialKnownNetworks() {
+        viewModelScope.launch {
+            try {
+                val count = wifiApiAdapter.getKnownNetworks().size
+                _uiState.value = _uiState.value.copy(knownNetworksCount = count)
+            } catch (_: Exception) {
+                // 權限不足或其他錯誤，保持 0
+            }
         }
     }
 
@@ -100,7 +113,12 @@ class DashboardViewModel @Inject constructor(
             smartSwitchEngine.getState().collect { engineState ->
                 _uiState.value = _uiState.value.copy(
                     smartSwitchEnabled = preferenceRepository.isSmartSwitchEnabled(),
-                    hotspotState = engineState.hotspotState,
+                    // 只在引擎有明確的 Hotspot 狀態時才更新，避免覆蓋初始偵測的值
+                    hotspotState = if (engineState.hotspotState != HotspotState.UNKNOWN) {
+                        engineState.hotspotState
+                    } else {
+                        _uiState.value.hotspotState
+                    },
                     knownNetworksCount = engineState.knownNetworksCount,
                     isRunning = engineState.isRunning
                 )
