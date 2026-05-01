@@ -20,9 +20,9 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            val keystoreFile = System.getenv("KEYSTORE_FILE")
-            if (keystoreFile != null) {
+        val keystoreFile = System.getenv("KEYSTORE_FILE")
+        if (keystoreFile != null && keystoreFile.isNotEmpty()) {
+            create("release") {
                 storeFile = file(keystoreFile)
                 storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
                 keyAlias = System.getenv("KEY_ALIAS") ?: ""
@@ -40,7 +40,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = try {
+                signingConfigs.getByName("release")
+            } catch (_: UnknownDomainObjectException) {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 
