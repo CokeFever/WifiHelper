@@ -96,67 +96,104 @@ class HotspotApiAdapterDirect @Inject constructor(
     override fun getControlMode(): HotspotControlMode = HotspotControlMode.DIRECT
 
     /**
-     * 透過反射呼叫 ConnectivityManager.startTethering()。
+     * 透過反射呼叫 ConnectivityManager.startTethering() 或
+     * WifiManager.setWifiApEnabled() 啟動 Hotspot。
      *
-     * OnStartTetheringCallback 是 abstract class（非 interface），
-     * 使用反射建立預設實例並傳入。結果透過輪詢 getWifiApState() 判斷。
+     * 策略：
+     * 1. 先嘗試 ConnectivityManager.startTethering()（需要建立 callback 實例）
+     * 2. 若失敗，fallback 到 WifiManager.setWifiApEnabled()（API 28 上更可靠）
      */
     private fun startTetheringViaReflection() {
-        val callbackClass = Class.forName(
-            "android.net.ConnectivityManager\$OnStartTetheringCallback"
-        )
-
-        // 建立 callback 實例（預設空實作）
-        val callbackInstance = callbackClass.getDeclaredConstructor().newInstance()
-
-        // 嘗試 4 參數版本（帶 Handler）
-        val method = try {
-            connectivityManager.javaClass.getDeclaredMethod(
-                "startTethering",
-                Int::class.javaPrimitiveType,
-                Boolean::class.javaPrimitiveType,
-                callbackClass,
-                Handler::class.java
+        // 策略 1：嘗試 ConnectivityManager.startTethering
+        try {
+            val callbackClass = Class.forName(
+                "android.net.ConnectivityManager\$OnStartTetheringCallback"
             )
-        } catch (e: NoSuchMethodException) {
-            // 嘗試 3 參數版本
-            connectivityManager.javaClass.getDeclaredMethod(
-                "startTethering",
-                Int::class.javaPrimitiveType,
-                Boolean::class.javaPrimitiveType,
-                callbackClass
-            )
+
+            // OnStartTetheringCallback 是 abstract class，嘗試用 getDeclaredConstructor
+            // 某些 ROM 允許實例化（方法有預設空實作）
+            val callbackInstance = try {
+                callbackClass.getDeclaredConstructor().apply { isAccessible = true }.newInstance()
+            } catch (_: Exception) {
+                null
+            }
+
+            if (callbackInstance != null) {
+                val method = try {
+                    connectivityManager.javaClass.getDeclaredMethod(
+                        "startTethering",
+                        Int::class.javaPrimitiveType,
+                        Boolean::class.javaPrimitiveType,
+                        callbackClass,
+                        Handler::class.java
+                    )
+                } catch (e: NoSuchMethodException) {
+                    connectivityManager.javaClass.getDeclaredMethod(
+                        "startTethering",
+                        Int::class.javaPrimitiveType,
+                        Boolean::class.javaPrimitiveType,
+                        callbackClass
+                    )
+                }
+
+                if (method.parameterCount == 4) {
+                    method.invoke(connectivityManager, TETHERING_WIFI, false, callbackInstance, Handler(Looper.getMainLooper()))
+                } else {
+                    method.invoke(connectivityManager, TETHERING_WIFI, false, callbackInstance)
+                }
+                return // 成功呼叫，由 enableHotspot 輪詢結果
+            }
+        } catch (e: Exception) {
+            CrashReporter.logError("startTethering via ConnectivityManager failed, trying fallback", e)
         }
 
-        if (method.parameterCount == 4) {
-            method.invoke(
-                connectivityManager,
-                TETHERING_WIFI,
-                false,
-                callbackInstance,
-                Handler(Looper.getMainLooper())
+        // 策略 2：Fallback 到 WifiManager.setWifiApEnabled (deprecated but works on API 28-29)
+        try {
+            @Suppress("DEPRECATION")
+            val configClass = Class.forName("android.net.wifi.WifiConfiguration")
+            val method = wifiManager.javaClass.getDeclaredMethod(
+                "setWifiApEnabled",
+                configClass,
+                Boolean::class.javaPrimitiveType
             )
-        } else {
-            method.invoke(
-                connectivityManager,
-                TETHERING_WIFI,
-                false,
-                callbackInstance
-            )
+            method.invoke(wifiManager, null, true)
+        } catch (e: Exception) {
+            CrashReporter.logError("setWifiApEnabled fallback also failed", e)
+            throw e // 讓上層 catch 處理
         }
     }
 
     /**
-     * 透過反射呼叫 ConnectivityManager.stopTethering()。
-     *
-     * 方法簽名：`void stopTethering(int type)`
+     * 透過反射呼叫 ConnectivityManager.stopTethering() 或
+     * WifiManager.setWifiApEnabled(null, false) 關閉 Hotspot。
      */
     private fun stopTetheringViaReflection() {
-        val method = connectivityManager.javaClass.getDeclaredMethod(
-            "stopTethering",
-            Int::class.javaPrimitiveType
-        )
-        method.invoke(connectivityManager, TETHERING_WIFI)
+        // 策略 1：ConnectivityManager.stopTethering
+        try {
+            val method = connectivityManager.javaClass.getDeclaredMethod(
+                "stopTethering",
+                Int::class.javaPrimitiveType
+            )
+            method.invoke(connectivityManager, TETHERING_WIFI)
+            return
+        } catch (e: Exception) {
+            CrashReporter.logError("stopTethering via ConnectivityManager failed, trying fallback", e)
+        }
+
+        // 策略 2：WifiManager.setWifiApEnabled(null, false)
+        try {
+            @Suppress("DEPRECATION")
+            val configClass = Class.forName("android.net.wifi.WifiConfiguration")
+            val method = wifiManager.javaClass.getDeclaredMethod(
+                "setWifiApEnabled",
+                configClass,
+                Boolean::class.javaPrimitiveType
+            )
+            method.invoke(wifiManager, null, false)
+        } catch (e: Exception) {
+            CrashReporter.logError("setWifiApEnabled(false) fallback also failed", e)
+            throw e
+        }
     }
 
     /**
