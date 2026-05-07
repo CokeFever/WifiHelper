@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import app.ixo.wifihelper.R
 import app.ixo.wifihelper.core.NetworkStateMonitor
 import app.ixo.wifihelper.data.PreferenceRepository
+import app.ixo.wifihelper.util.CrashReporter
 import app.ixo.wifihelper.service.ServiceRestartWorker
 import app.ixo.wifihelper.service.WifiManagerForegroundService
 import app.ixo.wifihelper.ui.dashboard.DashboardFragment
@@ -80,6 +81,11 @@ class MainActivity : AppCompatActivity() {
             bottomNavigation.selectedItemId = selectedId
         }
 
+        // Check if app crashed last session
+        if (CrashReporter.didCrashLastSession(this)) {
+            showCrashReportDialog()
+        }
+
         // Permission onboarding has already been completed at this point.
         // Refresh network state (SSID needs location permission) and sync service.
         networkStateMonitor.refreshState()
@@ -96,6 +102,27 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(KEY_SELECTED_NAV_ITEM, bottomNavigation.selectedItemId)
+    }
+
+    /**
+     * 顯示 crash 報告對話框，詢問使用者是否要寄出錯誤報告。
+     */
+    private fun showCrashReportDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.crash_report_title))
+            .setMessage(getString(R.string.crash_report_message))
+            .setPositiveButton(getString(R.string.crash_report_send)) { _, _ ->
+                val intent = CrashReporter.createEmailIntent(this)
+                if (intent != null) {
+                    startActivity(Intent.createChooser(intent, getString(R.string.crash_report_chooser)))
+                }
+                CrashReporter.clearCrashFlag(this)
+            }
+            .setNegativeButton(getString(R.string.crash_report_dismiss)) { _, _ ->
+                CrashReporter.clearCrashFlag(this)
+            }
+            .setCancelable(false)
+            .show()
     }
 
     /**

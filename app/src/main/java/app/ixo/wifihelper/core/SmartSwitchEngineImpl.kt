@@ -10,6 +10,7 @@ import app.ixo.wifihelper.model.HotspotResult
 import app.ixo.wifihelper.model.HotspotState
 import app.ixo.wifihelper.model.NetworkMode
 import app.ixo.wifihelper.model.SmartSwitchState
+import app.ixo.wifihelper.util.CrashReporter
 import app.ixo.wifihelper.util.NetworkSelector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -109,6 +110,7 @@ class SmartSwitchEngineImpl @Inject constructor(
                     executeScanCycle()
                 } catch (e: Exception) {
                     Log.e(TAG, "Error during scan cycle", e)
+                    CrashReporter.logError("Error during scan cycle", e)
                 }
                 delay(SCAN_INTERVAL_MS)
             }

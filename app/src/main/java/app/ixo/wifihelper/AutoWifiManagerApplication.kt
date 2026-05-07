@@ -2,6 +2,7 @@ package app.ixo.wifihelper
 
 import android.app.Application
 import androidx.work.Configuration
+import app.ixo.wifihelper.util.CrashReporter
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -19,6 +20,11 @@ class AutoWifiManagerApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: androidx.hilt.work.HiltWorkerFactory
+
+    override fun onCreate() {
+        super.onCreate()
+        CrashReporter.init(this)
+    }
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()

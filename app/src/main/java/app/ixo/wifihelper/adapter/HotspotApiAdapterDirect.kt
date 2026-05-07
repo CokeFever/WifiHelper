@@ -7,6 +7,7 @@ import android.os.Looper
 import app.ixo.wifihelper.model.HotspotControlMode
 import app.ixo.wifihelper.model.HotspotResult
 import app.ixo.wifihelper.model.HotspotState
+import app.ixo.wifihelper.util.CrashReporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -63,6 +64,7 @@ class HotspotApiAdapterDirect @Inject constructor(
             }
             HotspotResult.Failure("操作未成功，請重試")
         } catch (e: Exception) {
+            CrashReporter.logError("Hotspot enableHotspot reflection failed", e)
             HotspotResult.Failure("操作未成功，請重試")
         }
     }
@@ -72,6 +74,7 @@ class HotspotApiAdapterDirect @Inject constructor(
             stopTetheringViaReflection()
             HotspotResult.Success
         } catch (e: Exception) {
+            CrashReporter.logError("Hotspot disableHotspot reflection failed", e)
             HotspotResult.Failure("操作未成功，請重試")
         }
     }
@@ -85,6 +88,7 @@ class HotspotApiAdapterDirect @Inject constructor(
                 else -> HotspotState.UNKNOWN
             }
         } catch (e: Exception) {
+            CrashReporter.logError("Hotspot getHotspotState reflection failed", e)
             HotspotState.UNKNOWN
         }
     }

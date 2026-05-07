@@ -10,6 +10,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.content.ContextCompat
 import app.ixo.wifihelper.core.SmartSwitchEngine
+import app.ixo.wifihelper.util.CrashReporter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +76,7 @@ class WifiManagerForegroundService : Service() {
         // Now check permissions - if not granted, stop gracefully
         if (!hasRequiredPermissions()) {
             Log.e(TAG, "Required permissions not granted, stopping service")
+            CrashReporter.logError("Service stopped: required permissions not granted")
             stopSelf()
             return START_NOT_STICKY
         }

@@ -43,4 +43,11 @@
     <string name="signal_threshold_level_strong">訊號很強才連線</string>
     <string name="signal_range_weak_strong">弱 ← 訊號要求 → 強</string>
     <string name="signal_threshold_description">設定越靠右，WiFi 訊號需要越強才會自動連線</string>
+
+    <!-- Crash Report -->
+    <string name="crash_report_title">錯誤報告</string>
+    <string name="crash_report_message">App 上次發生錯誤，是否要將錯誤報告寄出？\n這將幫助我們改善 App 的穩定性。</string>
+    <string name="crash_report_send">寄出報告</string>
+    <string name="crash_report_dismiss">不用了</string>
+    <string name="crash_report_chooser">選擇 Email 應用程式</string>
 </resources>
