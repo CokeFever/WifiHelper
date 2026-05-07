@@ -8,12 +8,9 @@ import app.ixo.wifihelper.model.HotspotControlMode
 import app.ixo.wifihelper.model.HotspotResult
 import app.ixo.wifihelper.model.HotspotState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
 
 /**
  * Hotspot API 適配器的直接控制實作（API 28-32）。
@@ -50,27 +47,23 @@ class HotspotApiAdapterDirect @Inject constructor(
 
     override suspend fun enableHotspot(): HotspotResult = withContext(Dispatchers.IO) {
         try {
-            val result = withTimeoutOrNull(TETHERING_TIMEOUT_MS) {
-                suspendCancellableCoroutine { continuation ->
-                    startTetheringViaReflection(
-                        onSuccess = {
-                            if (continuation.isActive) {
-                                continuation.resume(HotspotResult.Success)
-                            }
-                        },
-                        onFailure = { errorCode ->
-                            if (continuation.isActive) {
-                                continuation.resume(
-                                    HotspotResult.Failure("Tethering 啟動失敗，錯誤碼：$errorCode")
-                                )
-                            }
-                        }
-                    )
-                }
+            // 呼叫 startTethering 反射
+            startTetheringViaReflection()
+
+            // 等待 Hotspot 啟動（輪詢狀態）
+            val startTime = System.currentTimeMillis()
+            while (System.currentTimeMillis() - startTime < TETHERING_TIMEOUT_MS) {
+                kotlinx.coroutines.delay(500)
+                try {
+                    val apState = getWifiApStateViaReflection()
+                    if (apState == WIFI_AP_STATE_ENABLED) {
+                        return@withContext HotspotResult.Success
+                    }
+                } catch (_: Exception) { }
             }
-            result ?: HotspotResult.Failure("Hotspot 啟動逾時")
+            HotspotResult.Failure("操作未成功，請重試")
         } catch (e: Exception) {
-            HotspotResult.Failure("Hotspot 啟動失敗：${e.message}")
+            HotspotResult.Failure("操作未成功，請重試")
         }
     }
 
@@ -79,7 +72,7 @@ class HotspotApiAdapterDirect @Inject constructor(
             stopTetheringViaReflection()
             HotspotResult.Success
         } catch (e: Exception) {
-            HotspotResult.Failure("Hotspot 關閉失敗：${e.message}")
+            HotspotResult.Failure("操作未成功，請重試")
         }
     }
 
@@ -101,60 +94,37 @@ class HotspotApiAdapterDirect @Inject constructor(
     /**
      * 透過反射呼叫 ConnectivityManager.startTethering()。
      *
-     * 方法簽名：
-     * ```
-     * void startTethering(int type, boolean showProvisioningUi,
-     *     OnStartTetheringCallback callback, Handler handler)
-     * ```
+     * OnStartTetheringCallback 是 abstract class（非 interface），
+     * 使用反射建立預設實例並傳入。結果透過輪詢 getWifiApState() 判斷。
      */
-    private fun startTetheringViaReflection(
-        onSuccess: () -> Unit,
-        onFailure: (Int) -> Unit
-    ) {
-        try {
-            // 取得 OnStartTetheringCallback 內部類別
-            val callbackClass = Class.forName(
-                "android.net.ConnectivityManager\$OnStartTetheringCallback"
-            )
+    private fun startTetheringViaReflection() {
+        val callbackClass = Class.forName(
+            "android.net.ConnectivityManager\$OnStartTetheringCallback"
+        )
 
-            // 建立回呼的動態代理
-            val callbackProxy = object : Any() {
-                // 透過反射被呼叫
-                @Suppress("unused")
-                fun onTetheringStarted() {
-                    onSuccess()
-                }
+        // 建立 callback 實例（預設空實作）
+        val callbackInstance = callbackClass.getDeclaredConstructor().newInstance()
 
-                // 透過反射被呼叫
-                @Suppress("unused")
-                fun onTetheringFailed(error: Int) {
-                    onFailure(error)
-                }
-            }
-
-            // 使用 Proxy 建立 callback 實例
-            val callbackInstance = java.lang.reflect.Proxy.newProxyInstance(
-                callbackClass.classLoader,
-                arrayOf(callbackClass)
-            ) { _, method, args ->
-                when (method.name) {
-                    "onTetheringStarted" -> callbackProxy.onTetheringStarted()
-                    "onTetheringFailed" -> {
-                        val errorCode = (args?.firstOrNull() as? Int) ?: -1
-                        callbackProxy.onTetheringFailed(errorCode)
-                    }
-                }
-                null
-            }
-
-            // 呼叫 startTethering
-            val method = connectivityManager.javaClass.getDeclaredMethod(
+        // 嘗試 4 參數版本（帶 Handler）
+        val method = try {
+            connectivityManager.javaClass.getDeclaredMethod(
                 "startTethering",
                 Int::class.javaPrimitiveType,
                 Boolean::class.javaPrimitiveType,
                 callbackClass,
                 Handler::class.java
             )
+        } catch (e: NoSuchMethodException) {
+            // 嘗試 3 參數版本
+            connectivityManager.javaClass.getDeclaredMethod(
+                "startTethering",
+                Int::class.javaPrimitiveType,
+                Boolean::class.javaPrimitiveType,
+                callbackClass
+            )
+        }
+
+        if (method.parameterCount == 4) {
             method.invoke(
                 connectivityManager,
                 TETHERING_WIFI,
@@ -162,10 +132,13 @@ class HotspotApiAdapterDirect @Inject constructor(
                 callbackInstance,
                 Handler(Looper.getMainLooper())
             )
-        } catch (e: NoSuchMethodException) {
-            onFailure(-1)
-        } catch (e: Exception) {
-            onFailure(-1)
+        } else {
+            method.invoke(
+                connectivityManager,
+                TETHERING_WIFI,
+                false,
+                callbackInstance
+            )
         }
     }
 
