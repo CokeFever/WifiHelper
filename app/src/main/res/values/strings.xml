@@ -29,6 +29,7 @@
     <string name="onboarding_background_location_description">背景 WiFi 監控需要背景位置權限，以便在 App 未開啟時仍能自動偵測 WiFi 網路。\n\n請選擇「一律允許」。</string>
     <string name="onboarding_nearby_devices_description">WiFi 裝置探索需要鄰近裝置權限，以便掃描周圍的 WiFi 網路。</string>
     <string name="onboarding_notifications_description">通知權限可讓 App 在狀態列顯示目前的 WiFi 連線狀態。\n\n此為選用權限，您可以跳過。</string>
+    <string name="onboarding_write_settings_description">Hotspot 控制需要「修改系統設定」權限，以便 App 直接開啟或關閉 WiFi 熱點。\n\n請開啟「允許修改系統設定」。</string>
     <string name="onboarding_permission_denied_settings">此權限為 App 正常運作所必需。\n\n請點擊下方按鈕前往系統設定手動開啟權限。</string>
     <string name="onboarding_permission_denied_retry">%1$s\n\n此權限為必要權限，請再次授予。</string>
 

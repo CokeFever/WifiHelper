@@ -179,6 +179,18 @@ class PermissionOnboardingActivity : AppCompatActivity() {
             )
         }
 
+        // Step 5: WRITE_SETTINGS (API 28-32, for Hotspot direct control)
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            steps.add(
+                PermissionStep(
+                    permission = Manifest.permission.WRITE_SETTINGS,
+                    description = getString(R.string.onboarding_write_settings_description),
+                    isOptional = false,
+                    requestMode = RequestMode.WRITE_SETTINGS
+                )
+            )
+        }
+
         return steps
     }
 
@@ -207,10 +219,9 @@ class PermissionOnboardingActivity : AppCompatActivity() {
         )
 
         // Update button text based on request mode
-        grantButton.text = if (step.requestMode == RequestMode.APP_SETTINGS) {
-            getString(R.string.onboarding_open_settings)
-        } else {
-            getString(R.string.onboarding_grant_permission)
+        grantButton.text = when (step.requestMode) {
+            RequestMode.APP_SETTINGS, RequestMode.WRITE_SETTINGS -> getString(R.string.onboarding_open_settings)
+            RequestMode.RUNTIME -> getString(R.string.onboarding_grant_permission)
         }
     }
 
@@ -232,6 +243,10 @@ class PermissionOnboardingActivity : AppCompatActivity() {
             RequestMode.APP_SETTINGS -> {
                 // Open app settings for background location (API 30+)
                 openAppSettings()
+            }
+            RequestMode.WRITE_SETTINGS -> {
+                // WRITE_SETTINGS requires a special system settings page
+                openWriteSettingsPage()
             }
         }
     }
@@ -294,6 +309,9 @@ class PermissionOnboardingActivity : AppCompatActivity() {
     // ── Helpers ──────────────────────────────────────────────────────────
 
     private fun isPermissionGranted(permission: String): Boolean {
+        if (permission == Manifest.permission.WRITE_SETTINGS) {
+            return android.provider.Settings.System.canWrite(this)
+        }
         return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
     }
 
@@ -321,6 +339,13 @@ class PermissionOnboardingActivity : AppCompatActivity() {
         appSettingsLauncher.launch(intent)
     }
 
+    private fun openWriteSettingsPage() {
+        val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        appSettingsLauncher.launch(intent)
+    }
+
     private fun markOnboardingComplete() {
         getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
@@ -341,6 +366,8 @@ class PermissionOnboardingActivity : AppCompatActivity() {
         /** Request via standard runtime permission dialog */
         RUNTIME,
         /** Must open app settings (e.g., background location on API 30+) */
-        APP_SETTINGS
+        APP_SETTINGS,
+        /** Must open WRITE_SETTINGS system page (special permission for Hotspot control) */
+        WRITE_SETTINGS
     }
 }
