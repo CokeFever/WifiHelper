@@ -50,6 +50,7 @@ class SettingsFragment : Fragment() {
     private lateinit var signalThresholdSeekbar: SeekBar
     private lateinit var signalRangeLabels: TextView
     private lateinit var footerText: TextView
+    private lateinit var sendLogButton: com.google.android.material.button.MaterialButton
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -76,6 +77,7 @@ class SettingsFragment : Fragment() {
         signalThresholdSeekbar = view.findViewById(R.id.signal_threshold_seekbar)
         signalRangeLabels = view.findViewById(R.id.signal_range_labels)
         footerText = view.findViewById(R.id.footer_text)
+        sendLogButton = view.findViewById(R.id.send_log_button)
 
         // 設定 SeekBar 範圍
         signalThresholdSeekbar.max = SEEKBAR_MAX
@@ -83,6 +85,14 @@ class SettingsFragment : Fragment() {
 
         // 設定 footer：版號 + 可點擊的官網連結
         setupFooter()
+
+        // 寄出 Log 按鈕
+        sendLogButton.setOnClickListener {
+            val intent = app.ixo.wifihelper.util.CrashReporter.createEmailIntent(requireContext())
+            if (intent != null) {
+                startActivity(android.content.Intent.createChooser(intent, getString(R.string.crash_report_chooser)))
+            }
+        }
     }
 
     /**

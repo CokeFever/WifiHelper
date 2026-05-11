@@ -51,4 +51,5 @@
     <string name="crash_report_send">寄出報告</string>
     <string name="crash_report_dismiss">不用了</string>
     <string name="crash_report_chooser">選擇 Email 應用程式</string>
+    <string name="send_log_button">寄出 Log 報告</string>
 </resources>

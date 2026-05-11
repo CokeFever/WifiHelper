@@ -48,8 +48,11 @@ class HotspotApiAdapterDirect @Inject constructor(
 
     override suspend fun enableHotspot(): HotspotResult = withContext(Dispatchers.IO) {
         try {
+            CrashReporter.logInfo("enableHotspot: starting, current state=${try { getWifiApStateViaReflection() } catch (_: Exception) { "unknown" }}")
+
             // 呼叫 startTethering 反射
             startTetheringViaReflection()
+            CrashReporter.logInfo("enableHotspot: reflection call completed, polling for state change...")
 
             // 等待 Hotspot 啟動（輪詢狀態）
             val startTime = System.currentTimeMillis()
@@ -57,14 +60,19 @@ class HotspotApiAdapterDirect @Inject constructor(
                 kotlinx.coroutines.delay(500)
                 try {
                     val apState = getWifiApStateViaReflection()
+                    CrashReporter.logInfo("enableHotspot: polling apState=$apState")
                     if (apState == WIFI_AP_STATE_ENABLED) {
+                        CrashReporter.logInfo("enableHotspot: SUCCESS - Hotspot enabled")
                         return@withContext HotspotResult.Success
                     }
-                } catch (_: Exception) { }
+                } catch (e: Exception) {
+                    CrashReporter.logError("enableHotspot: polling getWifiApState failed", e)
+                }
             }
+            CrashReporter.logError("enableHotspot: TIMEOUT - state never became ENABLED")
             HotspotResult.Failure("操作未成功，請重試")
         } catch (e: Exception) {
-            CrashReporter.logError("Hotspot enableHotspot reflection failed", e)
+            CrashReporter.logError("enableHotspot: exception", e)
             HotspotResult.Failure("操作未成功，請重試")
         }
     }
@@ -110,15 +118,15 @@ class HotspotApiAdapterDirect @Inject constructor(
                 "android.net.ConnectivityManager\$OnStartTetheringCallback"
             )
 
-            // OnStartTetheringCallback 是 abstract class，嘗試用 getDeclaredConstructor
-            // 某些 ROM 允許實例化（方法有預設空實作）
             val callbackInstance = try {
                 callbackClass.getDeclaredConstructor().apply { isAccessible = true }.newInstance()
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                CrashReporter.logInfo("startTethering: callback instantiation failed: ${e.javaClass.simpleName}: ${e.message}")
                 null
             }
 
             if (callbackInstance != null) {
+                CrashReporter.logInfo("startTethering: using ConnectivityManager.startTethering with callback")
                 val method = try {
                     connectivityManager.javaClass.getDeclaredMethod(
                         "startTethering",
@@ -141,14 +149,16 @@ class HotspotApiAdapterDirect @Inject constructor(
                 } else {
                     method.invoke(connectivityManager, TETHERING_WIFI, false, callbackInstance)
                 }
-                return // 成功呼叫，由 enableHotspot 輪詢結果
+                CrashReporter.logInfo("startTethering: ConnectivityManager.startTethering invoked successfully")
+                return
             }
         } catch (e: Exception) {
-            CrashReporter.logError("startTethering via ConnectivityManager failed, trying fallback", e)
+            CrashReporter.logError("startTethering: ConnectivityManager strategy failed", e)
         }
 
-        // 策略 2：Fallback 到 WifiManager.setWifiApEnabled (deprecated but works on API 28-29)
+        // 策略 2：Fallback 到 WifiManager.setWifiApEnabled
         try {
+            CrashReporter.logInfo("startTethering: using fallback WifiManager.setWifiApEnabled(null, true)")
             @Suppress("DEPRECATION")
             val configClass = Class.forName("android.net.wifi.WifiConfiguration")
             val method = wifiManager.javaClass.getDeclaredMethod(
@@ -156,10 +166,11 @@ class HotspotApiAdapterDirect @Inject constructor(
                 configClass,
                 Boolean::class.javaPrimitiveType
             )
-            method.invoke(wifiManager, null, true)
+            val result = method.invoke(wifiManager, null, true)
+            CrashReporter.logInfo("startTethering: setWifiApEnabled returned: $result")
         } catch (e: Exception) {
-            CrashReporter.logError("setWifiApEnabled fallback also failed", e)
-            throw e // 讓上層 catch 處理
+            CrashReporter.logError("startTethering: setWifiApEnabled fallback also failed", e)
+            throw e
         }
     }
 
