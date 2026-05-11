@@ -294,15 +294,17 @@ class SmartSwitchEngineImpl @Inject constructor(
     }
 
     /**
-     * 執行 WiFi 連線：先關閉 Hotspot，再連線至目標網路。
+     * 執行 WiFi 連線：先關閉 Hotspot（會自動恢復 WiFi），再連線至目標網路。
      */
     private suspend fun connectToWifi(targetSsid: String) {
         Log.i(TAG, "Connecting to WiFi: $targetSsid")
         updateState { copy(currentMode = NetworkMode.SWITCHING) }
 
-        // 先關閉 Hotspot
+        // 先關閉 Hotspot（disableHotspot 會自動恢復 WiFi）
         try {
             hotspotApiAdapter.disableHotspot()
+            // 等待 WiFi 硬體恢復
+            kotlinx.coroutines.delay(1500)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to disable hotspot before WiFi connection", e)
         }

@@ -50,6 +50,15 @@ class HotspotApiAdapterDirect @Inject constructor(
         try {
             CrashReporter.logInfo("enableHotspot: starting, current state=${try { getWifiApStateViaReflection() } catch (_: Exception) { "unknown" }}")
 
+            // AOSP Android 9 要求：開啟 Hotspot 前必須先關閉 WiFi（共用射頻）
+            // API 29+ 的 setWifiEnabled 已無效，但 startTethering 會自動處理
+            if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P && wifiManager.isWifiEnabled) {
+                CrashReporter.logInfo("enableHotspot: API 28 - WiFi is enabled, disabling first...")
+                @Suppress("DEPRECATION")
+                wifiManager.isWifiEnabled = false
+                kotlinx.coroutines.delay(1000) // 等待 WiFi 完全關閉
+            }
+
             // 呼叫 startTethering 反射
             startTetheringViaReflection()
             CrashReporter.logInfo("enableHotspot: reflection call completed, polling for state change...")
@@ -80,6 +89,15 @@ class HotspotApiAdapterDirect @Inject constructor(
     override suspend fun disableHotspot(): HotspotResult = withContext(Dispatchers.IO) {
         try {
             stopTetheringViaReflection()
+
+            // API 28：enableHotspot 時關閉了 WiFi，需要重新開啟
+            // API 29+：setWifiEnabled 無效，但系統會在 Hotspot 關閉後自動恢復 WiFi
+            if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P && !wifiManager.isWifiEnabled) {
+                CrashReporter.logInfo("disableHotspot: API 28 - re-enabling WiFi after hotspot stop")
+                @Suppress("DEPRECATION")
+                wifiManager.isWifiEnabled = true
+            }
+
             HotspotResult.Success
         } catch (e: Exception) {
             CrashReporter.logError("Hotspot disableHotspot reflection failed", e)
@@ -158,16 +176,26 @@ class HotspotApiAdapterDirect @Inject constructor(
 
         // 策略 2：Fallback 到 WifiManager.setWifiApEnabled
         try {
-            CrashReporter.logInfo("startTethering: using fallback WifiManager.setWifiApEnabled(null, true)")
+            CrashReporter.logInfo("startTethering: using fallback WifiManager.setWifiApEnabled")
             @Suppress("DEPRECATION")
             val configClass = Class.forName("android.net.wifi.WifiConfiguration")
+
+            // 嘗試取得現有的 AP 設定（某些 ROM 需要有效的 config 才能啟動）
+            val apConfig = try {
+                val getConfigMethod = wifiManager.javaClass.getDeclaredMethod("getWifiApConfiguration")
+                getConfigMethod.invoke(wifiManager)
+            } catch (_: Exception) {
+                CrashReporter.logInfo("startTethering: getWifiApConfiguration failed, using null config")
+                null
+            }
+
             val method = wifiManager.javaClass.getDeclaredMethod(
                 "setWifiApEnabled",
                 configClass,
                 Boolean::class.javaPrimitiveType
             )
-            val result = method.invoke(wifiManager, null, true)
-            CrashReporter.logInfo("startTethering: setWifiApEnabled returned: $result")
+            val result = method.invoke(wifiManager, apConfig, true)
+            CrashReporter.logInfo("startTethering: setWifiApEnabled(config=${apConfig != null}, true) returned: $result")
         } catch (e: Exception) {
             CrashReporter.logError("startTethering: setWifiApEnabled fallback also failed", e)
             throw e

@@ -17,7 +17,7 @@
         android:orientation="vertical"
         android:padding="16dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/footer_text"
+        app:layout_constraintBottom_toTopOf="@id/footer_container"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.45">
@@ -119,31 +119,37 @@
             android:textSize="16sp"
             android:alpha="0.7" />
 
-        <!-- Send Log button -->
+    </LinearLayout>
+
+    <!-- Footer: send log + version + website -->
+    <LinearLayout
+        android:id="@+id/footer_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/send_log_button"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="24dp"
+            android:layout_height="40dp"
             android:text="@string/send_log_button"
-            android:textSize="14sp" />
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/footer_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/on_background"
+            android:textSize="12sp"
+            android:alpha="0.5" />
 
     </LinearLayout>
-
-    <!-- Footer: version + website -->
-    <TextView
-        android:id="@+id/footer_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:gravity="center"
-        android:textColor="@color/on_background"
-        android:textSize="12sp"
-        android:alpha="0.5"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
