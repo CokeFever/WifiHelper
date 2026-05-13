@@ -96,8 +96,40 @@ object CrashReporter {
     }
 
     /**
+     * 取得 log 檔案內容（最後 200 行）。
+     */
+    fun getLogContent(context: Context): String {
+        val logDir = File(context.filesDir, LOG_DIR)
+        val file = File(logDir, LOG_FILE)
+        if (!file.exists()) return "No log file found"
+
+        val lines = file.readLines()
+        val lastLines = lines.takeLast(200)
+        return lastLines.joinToString("\n")
+    }
+
+    /**
+     * 建立分享 Log 的 Intent（使用 text/plain 以支援更多 App）。
+     */
+    fun createShareIntent(context: Context): Intent {
+        val version = getAppVersion(context)
+        val logContent = getLogContent(context)
+        val deviceInfo = "裝置：${Build.MANUFACTURER} ${Build.MODEL}\n" +
+            "Android：${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n" +
+            "App 版本：v$version\n" +
+            "---\n"
+
+        return Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "[WiFi Helper] Log v$version")
+            putExtra(Intent.EXTRA_TEXT, deviceInfo + logContent)
+        }
+    }
+
+    /**
      * 建立寄送 email 的 Intent。
      */
+    @Deprecated("Use createShareIntent() instead for better car device compatibility")
     fun createEmailIntent(context: Context): Intent? {
         val logDir = File(context.filesDir, LOG_DIR)
         val file = File(logDir, LOG_FILE)

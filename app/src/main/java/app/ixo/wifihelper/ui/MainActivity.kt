@@ -112,10 +112,8 @@ class MainActivity : AppCompatActivity() {
             .setTitle(getString(R.string.crash_report_title))
             .setMessage(getString(R.string.crash_report_message))
             .setPositiveButton(getString(R.string.crash_report_send)) { _, _ ->
-                val intent = CrashReporter.createEmailIntent(this)
-                if (intent != null) {
-                    startActivity(Intent.createChooser(intent, getString(R.string.crash_report_chooser)))
-                }
+                val intent = CrashReporter.createShareIntent(this)
+                startActivity(Intent.createChooser(intent, getString(R.string.crash_report_chooser)))
                 CrashReporter.clearCrashFlag(this)
             }
             .setNegativeButton(getString(R.string.crash_report_dismiss)) { _, _ ->

@@ -88,10 +88,7 @@ class SettingsFragment : Fragment() {
 
         // 寄出 Log 按鈕
         sendLogButton.setOnClickListener {
-            val intent = app.ixo.wifihelper.util.CrashReporter.createEmailIntent(requireContext())
-            if (intent != null) {
-                startActivity(android.content.Intent.createChooser(intent, getString(R.string.crash_report_chooser)))
-            }
+            showLogOptionsDialog()
         }
     }
 
@@ -212,5 +209,43 @@ class SettingsFragment : Fragment() {
 
         footerText.text = spannable
         footerText.movementMethod = android.text.method.LinkMovementMethod.getInstance()
+    }
+
+    /**
+     * 顯示 Log 操作選項對話框（複製 / 分享）。
+     */
+    private fun showLogOptionsDialog() {
+        val options = arrayOf(
+            getString(R.string.log_option_copy),
+            getString(R.string.log_option_share)
+        )
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.send_log_button))
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> copyLogToClipboard()
+                    1 -> shareLog()
+                }
+            }
+            .show()
+    }
+
+    /**
+     * 複製 Log 內容到剪貼簿。
+     */
+    private fun copyLogToClipboard() {
+        val logContent = app.ixo.wifihelper.util.CrashReporter.getLogContent(requireContext())
+        val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = android.content.ClipData.newPlainText("WiFi Helper Log", logContent)
+        clipboard.setPrimaryClip(clip)
+        android.widget.Toast.makeText(requireContext(), getString(R.string.log_copied), android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * 透過分享 Intent 分享 Log。
+     */
+    private fun shareLog() {
+        val intent = app.ixo.wifihelper.util.CrashReporter.createShareIntent(requireContext())
+        startActivity(android.content.Intent.createChooser(intent, getString(R.string.crash_report_chooser)))
     }
 }

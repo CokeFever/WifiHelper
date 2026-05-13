@@ -52,4 +52,7 @@
     <string name="crash_report_dismiss">不用了</string>
     <string name="crash_report_chooser">選擇 Email 應用程式</string>
     <string name="send_log_button">寄出 Log 報告</string>
+    <string name="log_option_copy">複製 Log 到剪貼簿</string>
+    <string name="log_option_share">分享 Log</string>
+    <string name="log_copied">Log 已複製到剪貼簿</string>
 </resources>
