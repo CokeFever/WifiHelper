@@ -4,6 +4,7 @@ import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import app.ixo.wifihelper.model.HotspotControlMode
 import app.ixo.wifihelper.model.HotspotResult
 import app.ixo.wifihelper.model.HotspotState
@@ -81,8 +82,32 @@ class HotspotApiAdapterDirect @Inject constructor(
             CrashReporter.logError("enableHotspot: TIMEOUT - state never became ENABLED")
             HotspotResult.Failure("操作未成功，請重試")
         } catch (e: Exception) {
-            CrashReporter.logError("enableHotspot: exception", e)
-            HotspotResult.Failure("操作未成功，請重試")
+            CrashReporter.logError("enableHotspot: exception, falling back to guided mode", e)
+            // 反射方法都失敗了（某些客製化 ROM 移除了 tethering API）
+            // Fallback 到引導模式：跳轉系統設定讓使用者手動開啟
+            HotspotResult.NeedUserAction(createTetheringSettingsIntent())
+        }
+    }
+
+    /**
+     * 建立跳轉至系統 Tethering 設定頁面的 Intent（用於反射失敗時的 fallback）。
+     */
+    private fun createTetheringSettingsIntent(): android.content.Intent {
+        val actions = listOf(
+            "android.settings.TETHERING_SETTINGS",
+            "com.android.settings.TetherSettings",
+            Settings.ACTION_WIRELESS_SETTINGS
+        )
+        for (action in actions) {
+            val intent = android.content.Intent(action).apply {
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (action == "android.settings.TETHERING_SETTINGS") {
+                return intent
+            }
+        }
+        return android.content.Intent(Settings.ACTION_WIRELESS_SETTINGS).apply {
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
         }
     }
 
